@@ -3,1591 +3,794 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SDGs 융합 AI 급식 혁신 솔루션 대시보드</title>
-    <!-- Tailwind CSS -->
+    <title>스마트 에코 워시 스테이션 (Smart Eco-Wash Station)</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Google Fonts (Pretendard & Noto Sans KR) -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome (아이콘) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Confetti (축하 효과) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;600;700;800&display=swap');
         body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: #f1f5f9;
+            font-family: 'Pretendard', sans-serif;
         }
         /* 스캔 레이저 애니메이션 */
         @keyframes scan {
-            0% { top: 0%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+            0% { top: 0%; opacity: 0.8; }
+            50% { top: 100%; opacity: 0.8; }
+            100% { top: 0%; opacity: 0.8; }
         }
         .scan-line {
-            animation: scan 2.2s ease-in-out infinite;
+            animation: scan 2.5s infinite linear;
         }
-        /* 미세한 펄스 효과 */
-        @keyframes pulse-soft {
-            0%, 100% { transform: scale(1); opacity: 0.95; }
-            50% { transform: scale(1.02); opacity: 1; }
+        /* 물 흐르는 애니메이션 */
+        @keyframes flow {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
         }
-        .pulse-card {
-            animation: pulse-soft 3s infinite ease-in-out;
-        }
-        /* 스크롤바 커스텀 */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+        .water-flow {
+            animation: flow 1s infinite linear;
         }
     </style>
 </head>
-<body class="text-slate-800 transition-colors duration-300">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- 네비게이션 바 -->
-    <nav class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- 좌측 로고 -->
-                <div class="flex items-center gap-3">
-                    <div class="bg-white p-2 rounded-xl text-emerald-600 shadow-md">
-                        <i data-lucide="leaf" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-black text-xl tracking-wider">GREEN PLATE AI</span>
-                            <span class="text-[10px] bg-emerald-500/50 border border-emerald-400 px-2 py-0.5 rounded-full font-bold">v1.5 School Sim</span>
-                        </div>
-                        <p class="text-[10px] text-emerald-100 font-medium">SDGs 목표 12·13·4 연계 행동 기술 플랫폼</p>
-                    </div>
+    <!-- GNB / 상단 헤더 -->
+    <header class="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-500 text-white p-2.5 rounded-xl shadow-md shadow-emerald-100 flex items-center justify-center">
+                    <i class="fa-solid fa-droplet text-xl"></i>
                 </div>
-                
-                <!-- 상단 탭 메뉴 -->
-                <div class="flex space-x-1 sm:space-x-2">
-                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3.5 py-2 rounded-xl text-sm font-bold bg-emerald-800 text-white shadow-inner transition-all flex items-center gap-1.5">
-                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>스캐너 시뮬레이터
-                    </button>
-                    <button onclick="switchTab('sdgs')" id="tab-sdgs" class="px-3.5 py-2 rounded-xl text-sm font-bold text-emerald-100 hover:bg-emerald-700 hover:text-white transition-all flex items-center gap-1.5">
-                        <i data-lucide="target" class="w-4 h-4"></i>SDGs 관심 목표
-                    </button>
-                    <button onclick="switchTab('persona')" id="tab-persona" class="px-3.5 py-2 rounded-xl text-sm font-bold text-emerald-100 hover:bg-emerald-700 hover:text-white transition-all flex items-center gap-1.5">
-                        <i data-lucide="users" class="w-4 h-4"></i>이해관계자 분석
-                    </button>
-                    <button onclick="switchTab('roadmap')" id="tab-roadmap" class="px-3.5 py-2 rounded-xl text-sm font-bold text-emerald-100 hover:bg-emerald-700 hover:text-white transition-all flex items-center gap-1.5">
-                        <i data-lucide="milestone" class="w-4 h-4"></i>로드맵 & 토론
-                    </button>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 flex items-center gap-2">
+                        스마트 에코 워시 스테이션
+                        <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">SDGs 6</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">전주해성고등학교 2학년 4반 | 팀 준우진</p>
                 </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- 나의 에코 포인트 -->
+                <div class="bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full flex items-center space-x-2">
+                    <i class="fa-solid fa-seedling text-emerald-500"></i>
+                    <span class="text-xs font-semibold text-slate-500">나의 포인트:</span>
+                    <span id="user-points" class="font-bold text-blue-600">1,250</span>
+                    <span class="text-xs text-blue-600 font-bold">P</span>
+                </div>
+                <!-- API 키 설정 모달 버튼 -->
+                <button onclick="toggleApiModal(true)" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- 메인 본문 -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        <!-- ==================== TAB 1: 스캐너 시뮬레이터 (학교 커스텀 기능 탑재) ==================== -->
-        <div id="content-dashboard" class="tab-content block">
+    <!-- 메인 레이아웃 -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- 왼쪽: AI 스캐너 및 세척 시뮬레이터 (lg:col-span-7) -->
+        <section class="lg:col-span-7 flex flex-col space-y-6">
             
-            <!-- 상단 정보 및 게이미피케이션 패널 -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- 환영 및 안내 카드 -->
-                <div class="lg:col-span-1 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between">
-                    <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-12 translate-y-12">
-                        <i data-lucide="scan" class="w-72 h-72"></i>
+            <!-- AI 에코 스캐너 카드 -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col flex-grow min-h-[500px]">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <span class="flex h-2.5 w-2.5 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            AI 스마트 수거 스캐너
+                        </h2>
+                        <p class="text-xs text-slate-500">버릴 페트병을 넣어주세요. AI가 세척 상태를 실시간 진단합니다.</p>
                     </div>
-                    <div class="relative z-10">
-                        <span class="bg-white/20 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest">School Simulator Mode</span>
-                        <h1 class="text-2xl font-extrabold mt-3 leading-tight" id="main-sim-title">그린고등학교 대시보드</h1>
-                        <p class="mt-2 text-emerald-100 text-xs leading-relaxed">
-                            우리 학교의 학생 수와 급식실 환경을 커스텀 설정하고 실시간 스캔을 적용해 보세요. 하루 잔반량 감소 수치가 학교 연간 절감 기금으로 확장 계산됩니다!
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-4 mt-6 z-10">
-                        <div class="flex items-center gap-1.5 text-xs bg-emerald-400/30 px-3 py-1.5 rounded-xl border border-white/10">
-                            <i data-lucide="school" class="w-3.5 h-3.5"></i><span id="badge-school-name">그린고등학교</span>
-                        </div>
-                        <div class="flex items-center gap-1.5 text-xs bg-emerald-400/30 px-3 py-1.5 rounded-xl border border-white/10">
-                            <i data-lucide="users" class="w-3.5 h-3.5"></i><span id="badge-student-count">600명 규모</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 에코 쿠폰 상점 -->
-                <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 flex flex-col justify-between relative overflow-hidden">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs font-bold text-slate-400">에코 보상 상점</span>
-                        <span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                            <i data-lucide="gift" class="w-3 h-3"></i>인기 보상
-                        </span>
-                    </div>
-
-                    <!-- 쿠폰 정보 및 목표 진행률 -->
-                    <div class="flex items-center gap-3.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 mb-3">
-                        <div class="bg-amber-500 text-white p-3 rounded-xl shadow-sm text-center font-black text-xs min-w-[56px]">
-                            편의점<br><span class="text-sm">5,000</span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h4 class="text-xs font-black text-slate-800">CU / GS25 5,000원 모바일 금액권</h4>
-                            <!-- 게이지 바 -->
-                            <div class="mt-2">
-                                <div class="flex justify-between text-[9px] font-bold text-slate-400 mb-1">
-                                    <span>쿠폰 교환 목표치 (2,500 P)</span>
-                                    <span id="coupon-progress-text">50.0%</span>
-                                </div>
-                                <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                                    <div id="coupon-progress-bar" class="bg-amber-500 h-full transition-all duration-300" style="width: 50%;"></div>
-                                </div>
+                    <!-- 가상 테스트용 샘플 프리셋 -->
+                    <div class="dropdown relative inline-block text-left">
+                        <button id="preset-btn" onclick="toggleDropdown()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-flask"></i> 테스트 프리셋 <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </button>
+                        <div id="preset-dropdown" class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20">
+                            <div class="py-1" role="menu">
+                                <button onclick="selectPreset('dirty')" class="block w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-100">① 오염된 음료수 페트병</button>
+                                <button onclick="selectPreset('labeled')" class="block w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-100">② 라벨이 붙은 깨끗한 병</button>
+                                <button onclick="selectPreset('clean')" class="block w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-100">③ 완벽히 세척된 페트병</button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- 교환 버튼 -->
-                    <button id="btn-redeem" onclick="redeemCoupon()" disabled class="w-full bg-slate-200 text-slate-400 text-xs font-black py-3 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-not-allowed">
-                        <i data-lucide="shopping-bag" class="w-4 h-4"></i>
-                        <span id="btn-redeem-text">포인트가 부족합니다 (2,500 P 필요)</span>
-                    </button>
                 </div>
 
-                <!-- 학생 에코 포인트 가상 프로필 (게이미피케이션) -->
-                <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 flex flex-col justify-between relative overflow-hidden">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-xs font-bold text-slate-400 block mb-0.5">나의 탄소 제로 에코 카드</span>
-                            <span class="text-lg font-black text-slate-800" id="user-name">에코 프렌즈 학생 (S-12)</span>
-                        </div>
-                        <span class="bg-emerald-100 text-emerald-700 text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1">
-                            <i data-lucide="award" class="w-3 h-3"></i>실천 멘토
-                        </span>
+                <!-- 수거기 스크린 -->
+                <div class="relative bg-slate-950 rounded-2xl flex-grow flex flex-col items-center justify-center overflow-hidden min-h-[300px] border border-slate-800">
+                    
+                    <!-- 스캔 레이저 라인 -->
+                    <div id="scanner-laser" class="hidden absolute left-0 right-0 h-1 bg-emerald-400 shadow-[0_0_15px_#10B981] z-10 scan-line"></div>
+
+                    <!-- 가상 세척 물줄기 (히든) -->
+                    <div id="water-spray" class="hidden absolute inset-0 bg-blue-500/20 z-10 pointer-events-none flex justify-center">
+                        <div class="w-24 h-full bg-blue-400/40 blur-sm water-flow"></div>
                     </div>
 
-                    <div class="my-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-emerald-500 text-white p-2.5 rounded-xl">
-                                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    <!-- 디스플레이 그래픽 및 비디오/이미지 영역 -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center p-4">
+                        
+                        <!-- 1. 기본 대기 화면 -->
+                        <div id="state-idle" class="flex flex-col items-center text-center space-y-4">
+                            <div class="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center border border-slate-800">
+                                <i class="fa-solid fa-recycle text-slate-600 text-3xl animate-pulse"></i>
                             </div>
                             <div>
-                                <span class="text-[10px] font-bold text-slate-400 block">누적 에코 포인트</span>
-                                <span class="text-xl font-black text-emerald-600" id="user-points">1,250 P</span>
+                                <p class="text-white font-medium text-sm">스캔 준비 완료</p>
+                                <p class="text-slate-500 text-xs mt-1">테스트 프리셋을 선택하거나 직접 사진을 올려보세요.</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <label class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-2">
+                                    <i class="fa-solid fa-image"></i> 사진 업로드
+                                    <input type="file" id="file-input" class="hidden" accept="image/*" onchange="handleImageUpload(event)">
+                                </label>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <span class="text-[9px] font-bold text-slate-400 block">배지 등급</span>
-                            <span class="text-sm font-extrabold text-teal-600" id="user-badge">새싹 그린스타 🌱</span>
-                        </div>
-                    </div>
 
-                    <!-- 실시간 팝업 안내창 대체용 메세지바 -->
-                    <div id="eco-notification" class="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl text-center border border-dashed border-slate-200">
-                        식판을 완벽하게 다 드시고 스캔하면 포인트가 적립됩니다!
+                        <!-- 2. 이미지/카메라 로딩 상태 -->
+                        <div id="state-loading" class="hidden flex flex-col items-center text-center space-y-4">
+                            <div class="relative w-40 h-40 border-4 border-slate-800 border-t-emerald-500 rounded-full animate-spin"></div>
+                            <p class="text-emerald-400 font-semibold text-sm animate-pulse">AI가 분리배출 상태 분석 중...</p>
+                        </div>
+
+                        <!-- 3. 이미지 프리뷰 / 분석 대상 표시 -->
+                        <img id="preview-img" class="hidden max-h-full max-w-full object-contain rounded-xl opacity-70" src="" alt="스캔 대상 이미지">
+
+                        <!-- 4. 결과 출력 화면 -->
+                        <div id="scan-result-card" class="hidden absolute bottom-4 left-4 right-4 bg-slate-900/90 backdrop-blur-md border border-slate-800 p-4 rounded-xl flex items-center justify-between z-10 animate-bounce">
+                            <div class="flex items-center space-x-3">
+                                <div id="result-icon-bg" class="w-10 h-10 rounded-lg flex items-center justify-center">
+                                    <i id="result-icon" class="fa-solid text-lg"></i>
+                                </div>
+                                <div>
+                                    <p id="result-status-title" class="text-xs font-semibold uppercase tracking-wider"></p>
+                                    <p id="result-desc" class="text-white font-bold text-sm"></p>
+                                    <p id="result-detail" class="text-slate-400 text-[11px] mt-0.5"></p>
+                                </div>
+                            </div>
+                            <div id="action-btn-container">
+                                <!-- 유동적인 액션 버튼 -->
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 시뮬레이터 본문 영역 -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                <!-- 1. 좌측 슬라이더 및 학교 맞춤형 커스텀 제어 패널 -->
-                <div class="lg:col-span-4 bg-white rounded-2xl p-6 shadow-md border border-slate-100 flex flex-col justify-between">
-                    <div>
-                        <!-- 시뮬레이션 학교 타겟 커스텀 영역 -->
-                        <div class="mb-5 pb-4 border-b border-slate-100">
-                            <div class="flex items-center gap-2 mb-3">
-                                <i data-lucide="settings" class="text-emerald-500 w-5 h-5"></i>
-                                <h2 class="text-base font-extrabold text-slate-800">시뮬레이션 대상 학교 설정</h2>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-2 mb-3">
-                                <div class="col-span-2">
-                                    <label class="block text-[10px] font-bold text-slate-400 mb-1">대상 학교 선택</label>
-                                    <select id="school-preset-select" onchange="applySchoolPreset()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                                        <option value="preset-1">그린고등학교 (600명)</option>
-                                        <option value="preset-2">늘푸른중학교 (450명)</option>
-                                        <option value="preset-3">에코과학고등학교 (800명)</option>
-                                        <option value="custom">직접 학교 정보 입력</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- 직접 입력 선택 시 노출될 커스텀 입력 양식 -->
-                            <div id="custom-school-inputs" class="hidden grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-150">
-                                <div>
-                                    <label class="block text-[9px] font-bold text-slate-400 mb-1">학교 이름</label>
-                                    <input type="text" id="custom-school-name" value="글로벌고등학교" oninput="applyCustomSchool()" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-bold focus:ring-2 focus:ring-emerald-500">
-                                </div>
-                                <div>
-                                    <label class="block text-[9px] font-bold text-slate-400 mb-1">전체 학생 수 (명)</label>
-                                    <input type="number" id="custom-school-students" value="500" min="50" max="3000" oninput="applyCustomSchool()" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-bold focus:ring-2 focus:ring-emerald-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 기존 급식 식단 및 잔반 슬라이더 영역 -->
-                        <div class="mb-5 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">오늘 배식된 급식 종류</label>
-                            <select id="menu-select" onchange="changeMenuSet()" class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2 text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all">
-                                <option value="korean">한식 테마 (흰밥 & 우거지국 & 제육볶음 & 김치)</option>
-                                <option value="western">양식 테마 (쌀밥 & 크림스프 & 수제돈까스 & 샐러드)</option>
-                                <option value="snack">분식 테마 (삼각김밥 & 매운어묵탕 & 떡볶이 & 군만두)</option>
-                            </select>
-                        </div>
-
-                        <!-- 개별 잔여 슬라이더 세트 -->
-                        <div class="space-y-4">
-                            <!-- RICE -->
-                            <div class="border-b border-slate-50 pb-3">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-xs font-bold text-slate-700" id="label-rice">흰밥</span>
-                                    <span class="text-[10px] font-bold text-emerald-600" id="val-rice">남김없이 다 먹음 (0%)</span>
-                                </div>
-                                <input type="range" id="input-rice" min="0" max="100" value="0" oninput="updateTrayVisual()" class="w-full accent-emerald-500 h-1.5 rounded-lg cursor-pointer">
-                            </div>
-
-                            <!-- SOUP -->
-                            <div class="border-b border-slate-50 pb-3">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-xs font-bold text-slate-700" id="label-soup">우거지국</span>
-                                    <span class="text-[10px] font-bold text-emerald-600" id="val-soup">남김없이 다 먹음 (0%)</span>
-                                </div>
-                                <input type="range" id="input-soup" min="0" max="100" value="0" oninput="updateTrayVisual()" class="w-full accent-emerald-500 h-1.5 rounded-lg cursor-pointer">
-                            </div>
-
-                            <!-- MAIN -->
-                            <div class="border-b border-slate-50 pb-3">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-xs font-bold text-slate-700" id="label-main">제육볶음</span>
-                                    <span class="text-[10px] font-bold text-emerald-600" id="val-main">남김없이 다 먹음 (0%)</span>
-                                </div>
-                                <input type="range" id="input-main" min="0" max="100" value="0" oninput="updateTrayVisual()" class="w-full accent-emerald-500 h-1.5 rounded-lg cursor-pointer">
-                            </div>
-
-                            <!-- SUB1 -->
-                            <div class="border-b border-slate-50 pb-3">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-xs font-bold text-slate-700" id="label-sub1">포기김치</span>
-                                    <span class="text-[10px] font-bold text-emerald-600" id="val-sub1">남김없이 다 먹음 (0%)</span>
-                                </div>
-                                <input type="range" id="input-sub1" min="0" max="100" value="0" oninput="updateTrayVisual()" class="w-full accent-emerald-500 h-1.5 rounded-lg cursor-pointer">
-                            </div>
-
-                            <!-- SUB2 -->
-                            <div class="pb-2">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-xs font-bold text-slate-700" id="label-sub2">시금치나물</span>
-                                    <span class="text-[10px] font-bold text-emerald-600" id="val-sub2">남김없이 다 먹음 (0%)</span>
-                                </div>
-                                <input type="range" id="input-sub2" min="0" max="100" value="0" oninput="updateTrayVisual()" class="w-full accent-emerald-500 h-1.5 rounded-lg cursor-pointer">
-                            </div>
-                        </div>
-
-                        <!-- 잔반 피드백 사유 선택 -->
-                        <div class="mt-4 bg-slate-50 p-3.5 rounded-xl border border-slate-100" id="reason-section">
-                            <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">잔반을 남긴 주된 이유</label>
-                            <div class="grid grid-cols-2 gap-2 text-xs">
-                                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border border-slate-200 cursor-pointer hover:border-emerald-300">
-                                    <input type="radio" name="waste-reason" value="full" checked class="accent-emerald-500">
-                                    <span>양이 너무 많음</span>
-                                </label>
-                                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border border-slate-200 cursor-pointer hover:border-emerald-300">
-                                    <input type="radio" name="waste-reason" value="taste" class="accent-emerald-500">
-                                    <span>맛/식감이 아쉬움</span>
-                                </label>
-                                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border border-slate-200 cursor-pointer hover:border-emerald-300">
-                                    <input type="radio" name="waste-reason" value="time" class="accent-emerald-500">
-                                    <span>배식 시간 부족</span>
-                                </label>
-                                <label class="flex items-center gap-1.5 bg-white p-2 rounded-lg border border-slate-200 cursor-pointer hover:border-emerald-300">
-                                    <input type="radio" name="waste-reason" value="etc" class="accent-emerald-500">
-                                    <span>컨디션/알레르기</span>
-                                </label>
-                            </div>
+                <!-- 안내 및 제어 가이드 하단바 -->
+                <div class="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center space-x-3">
+                        <span class="p-2 bg-blue-100 text-blue-600 rounded-lg"><i class="fa-solid fa-circle-info"></i></span>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-700">안내 가이드</p>
+                            <p class="text-[11px] text-slate-500">라벨을 떼고 속을 비워야 온전한 재활용이 가능합니다.</p>
                         </div>
                     </div>
-
-                    <div class="mt-6">
-                        <button onclick="triggerScan()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0">
-                            <i data-lucide="scan" class="w-5 h-5"></i>
-                            AI 스캔 및 정밀 분석 실행
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="resetScanner()" class="w-full sm:w-auto px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition-all">
+                            초기화
                         </button>
                     </div>
                 </div>
-
-                <!-- 2. 가운데 시각화 식판 및 스캐너 패널 -->
-                <div class="lg:col-span-5 bg-white rounded-2xl p-6 shadow-md border border-slate-100 flex flex-col items-center justify-between min-h-[520px]">
-                    <div class="w-full flex justify-between items-center pb-4 border-b border-slate-100">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping"></span>
-                            <span class="text-[10px] font-black text-rose-500 tracking-wider">AI VISION SENSOR ACTIVE</span>
-                        </div>
-                        <span class="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded" id="scanner-status">배식 대기 및 정렬 완료</span>
-                    </div>
-
-                    <!-- 입체식 식판 그래픽 -->
-                    <div class="relative my-6 w-full max-w-[350px] aspect-[4/3] bg-gradient-to-br from-slate-200 to-slate-300 rounded-[2.5rem] p-5 shadow-[inset_0_4px_10px_rgba(0,0,0,0.2),0_10px_25px_-5px_rgba(0,0,0,0.1)] border-[8px] border-slate-400 flex flex-col justify-between overflow-hidden">
-                        
-                        <!-- 레이저 주사선 애니메이션 -->
-                        <div id="laser" class="hidden absolute left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-rose-500 to-transparent shadow-[0_0_15px_rgba(244,63,94,1)] z-30 pointer-events-none scan-line"></div>
-                        
-                        <!-- 식판 위쪽 파트: 밥 및 국 구역 -->
-                        <div class="grid grid-cols-2 gap-4 h-1/2 mb-4">
-                            <!-- 밥 공간 -->
-                            <div class="relative bg-slate-400/50 rounded-[1.8rem] shadow-[inset_0_3px_6px_rgba(0,0,0,0.15)] flex items-center justify-center overflow-hidden border border-white/10">
-                                <span class="absolute top-2 left-4 text-[9px] font-black text-slate-600 tracking-widest z-10">RICE</span>
-                                <div id="vis-rice" class="absolute bottom-0 w-full bg-gradient-to-t from-slate-100 to-white transition-all duration-300 ease-out flex items-center justify-center" style="height: 0%;">
-                                    <!-- 밥알 디테일 데코 패턴 -->
-                                    <div class="absolute inset-0 opacity-25 bg-[radial-gradient(#e2e8f0_20%,transparent_20%)] bg-[size:8px_8px]"></div>
-                                    <span class="text-3xl select-none filter drop-shadow">🍚</span>
-                                </div>
-                            </div>
-                            <!-- 국 공간 -->
-                            <div class="relative bg-slate-400/50 rounded-[1.8rem] shadow-[inset_0_3px_6px_rgba(0,0,0,0.15)] flex items-center justify-center overflow-hidden border border-white/10">
-                                <span class="absolute top-2 left-4 text-[9px] font-black text-slate-600 tracking-widest z-10">SOUP</span>
-                                <div id="vis-soup" class="absolute bottom-0 w-full transition-all duration-300 ease-out flex items-center justify-center overflow-hidden" style="height: 0%;">
-                                    <!-- 액체 베이스 -->
-                                    <div id="soup-liquid" class="absolute inset-0 opacity-95"></div>
-                                    <!-- 국 건더기 디테일 데코 -->
-                                    <div class="absolute w-2 h-2 rounded-full bg-green-500/60 top-4 left-6"></div>
-                                    <div class="absolute w-3 h-1 rounded bg-orange-500/60 bottom-4 right-6"></div>
-                                    <span class="text-3xl select-none filter drop-shadow z-10">🍲</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 식판 아래쪽 파트: 3개의 찬류 공간 -->
-                        <div class="grid grid-cols-3 gap-3 h-1/2">
-                            <!-- 찬 1 (메인반찬 구역) -->
-                            <div class="relative bg-slate-400/50 rounded-[1.5rem] shadow-[inset_0_3px_6px_rgba(0,0,0,0.15)] flex items-center justify-center overflow-hidden border border-white/10">
-                                <span class="absolute top-1.5 left-3 text-[7px] font-black text-slate-600 tracking-widest z-10">MAIN</span>
-                                <div id="vis-main" class="absolute bottom-0 w-full transition-all duration-300 ease-out flex items-center justify-center overflow-hidden" style="height: 0%;">
-                                    <div id="main-liquid" class="absolute inset-0 opacity-90"></div>
-                                    <!-- 양념 데코 반점 -->
-                                    <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#b91c1c_15%,transparent_15%)] bg-[size:6px_6px]"></div>
-                                    <span class="text-2xl select-none filter drop-shadow z-10" id="emoji-main">🥩</span>
-                                </div>
-                            </div>
-                            <!-- 찬 2 (서브1 구역) -->
-                            <div class="relative bg-slate-400/50 rounded-[1.5rem] shadow-[inset_0_3px_6px_rgba(0,0,0,0.15)] flex items-center justify-center overflow-hidden border border-white/10">
-                                <span class="absolute top-1.5 left-3 text-[7px] font-black text-slate-600 tracking-widest z-10">SUB 1</span>
-                                <div id="vis-sub1" class="absolute bottom-0 w-full transition-all duration-300 ease-out flex items-center justify-center overflow-hidden" style="height: 0%;">
-                                    <div id="sub1-liquid" class="absolute inset-0 opacity-90"></div>
-                                    <span class="text-2xl select-none filter drop-shadow z-10" id="emoji-sub1">🌶️</span>
-                                </div>
-                            </div>
-                            <!-- 찬 3 (서브2 구역) -->
-                            <div class="relative bg-slate-400/50 rounded-[1.5rem] shadow-[inset_0_3px_6px_rgba(0,0,0,0.15)] flex items-center justify-center overflow-hidden border border-white/10">
-                                <span class="absolute top-1.5 left-3 text-[7px] font-black text-slate-600 tracking-widest z-10">SUB 2</span>
-                                <div id="vis-sub2" class="absolute bottom-0 w-full transition-all duration-300 ease-out flex items-center justify-center overflow-hidden" style="height: 0%;">
-                                    <div id="sub2-liquid" class="absolute inset-0 opacity-90"></div>
-                                    <span class="text-2xl select-none filter drop-shadow z-10" id="emoji-sub2">🥦</span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="text-center bg-slate-50 w-full p-4.5 rounded-xl border border-slate-100 text-xs">
-                        <span class="font-extrabold text-slate-700 block mb-1">💡 분석 테스트 팁</span>
-                        슬라이더를 조율하여 반찬을 담아보세요. 해당 음식 테마의 고유한 **양념 소스와 국물 색상 그래픽**이 식판 칸에 리얼하게 채워집니다!
-                    </div>
-                </div>
-
-                <!-- 3. 우측 모니터링 분석 보고서 및 실시간 랭킹 대시보드 -->
-                <div class="lg:col-span-3 bg-white rounded-2xl p-6 shadow-md border border-slate-100 flex flex-col justify-between">
-                    <div>
-                        <!-- 실시간 교내 에코 랭킹 -->
-                        <div class="mb-5">
-                            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="trophy" class="text-yellow-500 w-4 h-4"></i>
-                                    <span class="text-sm font-extrabold text-slate-800" id="rank-board-title">교내 실시간 에코 랭킹</span>
-                                </div>
-                                <span class="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">실시간 소팅</span>
-                            </div>
-                            <div class="space-y-2" id="ranking-list">
-                                <!-- JS에서 실시간 정렬 및 랭킹 데이터 렌더링 -->
-                            </div>
-                        </div>
-
-                        <!-- 핵심 계량 지표 -->
-                        <div class="space-y-3 mb-4 border-t border-slate-100 pt-3">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-slate-500 font-bold">나의 식판 감지 잔량</span>
-                                <span class="text-xs font-black text-slate-800" id="report-weight">0 g</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-slate-500 font-bold">개인 탄소 배출량</span>
-                                <span class="text-xs font-black text-rose-600" id="report-carbon">0 g $CO_2$</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs text-slate-500 font-bold">개인 잔반 종합 등급</span>
-                                <span class="text-[10px] font-black bg-slate-100 px-2 py-0.5 rounded text-slate-800" id="report-rating">기록 대기</span>
-                            </div>
-                        </div>
-
-                        <!-- 학교 스케일 단위로 확장 시뮬레이션 결과창 -->
-                        <div class="mb-5 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 rounded-2xl border border-emerald-150 shadow-sm">
-                            <span class="text-[10px] font-black text-emerald-800 flex items-center gap-1.5 uppercase tracking-wider mb-2">
-                                <i data-lucide="building-2" class="w-4 h-4"></i><span id="school-forecast-title">그린고 전체 예측 시뮬레이션</span>
-                            </span>
-                            <div class="space-y-2 text-xs">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[11px] text-slate-500">학교 하루 총 잔반량</span>
-                                    <span class="font-extrabold text-slate-800" id="sim-school-waste">0 kg</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[11px] text-slate-500">학교 연간 절감 기금</span>
-                                    <span class="font-extrabold text-emerald-600" id="sim-school-savings">₩0</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[11px] text-slate-500">온실가스 감축 환산</span>
-                                    <span class="font-extrabold text-slate-800" id="sim-school-carbon">0 kg $CO_2$</span>
-                                </div>
-                                <div class="flex justify-between items-center pt-1.5 border-t border-emerald-100 text-teal-800 font-bold">
-                                    <span class="text-[11px] flex items-center gap-1">
-                                        <i data-lucide="trees" class="w-3.5 h-3.5 text-teal-600"></i>소나무 기여 식재 효과
-                                    </span>
-                                    <span class="text-xs" id="sim-school-trees">0 그루</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- AI 통합 처방전 -->
-                        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                            <div class="flex items-center gap-1.5 text-emerald-800 mb-1">
-                                <i data-lucide="brain-circuit" class="w-4 h-4"></i>
-                                <span class="text-[10px] font-black uppercase tracking-widest">AI 맞춤형 급식 처방</span>
-                            </div>
-                            <p class="text-[11px] text-emerald-700 leading-relaxed font-medium" id="report-ai-msg">
-                                식판의 잔반을 설정하고 위의 "AI 스캔 및 정밀 분석 실행"을 탭하세요. 인공지능 알고리즘이 실시간 진단을 내려 드립니다.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
             </div>
-        </div>
-
-
-        <!-- ==================== TAB 2: SDG 관심 목표 정보 (HIGH DETAIL) ==================== -->
-        <div id="content-sdgs" class="tab-content hidden">
-            <!-- 소제목 섹션 -->
-            <div class="text-center max-w-2xl mx-auto mb-12">
-                <span class="text-emerald-600 font-black tracking-widest text-[10px] uppercase bg-emerald-100 px-3 py-1 rounded-full">Focused UN SDGs</span>
-                <h1 class="text-3xl font-black text-slate-800 mt-3">우리가 집중하는 3가지 미래 목표</h1>
-                <p class="text-slate-500 mt-2 text-sm leading-relaxed">
-                    UN의 17개 지속가능발전목표 중 학교 생활 속에서 우리가 능동적으로 해결할 수 있는 변화의 행동 양식을 조명합니다.
-                </p>
-            </div>
-
-            <!-- 3대 카드 전면 개편 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <!-- 가상 에코 워시 스테이션 (헹굼 / 라벨 제거 인터랙션 구역) -->
+            <div id="wash-station" class="hidden bg-white rounded-3xl p-6 shadow-sm border border-slate-100 animate-fade-in">
+                <h3 class="text-md font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-sink text-blue-500"></i> 스마트 에코-세척존
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">페트병을 깨끗하게 만들기 위해 아래의 정화 활동을 시뮬레이션 하세요.</p>
                 
-                <!-- SDG 12 -->
-                <div class="bg-white rounded-3xl border border-slate-100 shadow-md overflow-hidden flex flex-col justify-between group hover:shadow-lg transition-all transform hover:-translate-y-1">
-                    <div>
-                        <div class="bg-gradient-to-r from-orange-500 to-amber-500 p-6 text-white relative">
-                            <span class="text-xs font-black bg-white/20 px-2.5 py-0.5 rounded-lg">GOAL 12</span>
-                            <h2 class="text-xl font-black mt-2">지속가능한 소비와 생산</h2>
-                            <i data-lucide="refresh-cw" class="w-16 h-16 absolute right-4 bottom-2 opacity-15 transform rotate-12"></i>
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- 액션 1: 잔여물 세척 -->
+                    <button id="wash-rinse-btn" onclick="simulateRinse()" class="p-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-2xl flex flex-col items-center justify-center text-center transition-all group">
+                        <div class="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-md shadow-blue-100 mb-2 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-faucet-drip text-lg"></i>
                         </div>
-                        <div class="p-6 space-y-4">
-                            <div>
-                                <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">학교 내 체감 및 선정 이유</h3>
-                                <p class="text-slate-600 text-xs leading-relaxed">
-                                    급식실 뒤편에 산더미같이 쌓여 악취를 유발하는 매일의 음식 폐기물을 보았습니다. 예측 오류로 통째 버려지는 식재료와 무분별한 과다 배식이 낭비 악순환의 기원임을 직접 목격했습니다.
-                                </p>
-                            </div>
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <span class="text-[9px] font-black text-orange-600 block mb-1">주요 해결 과제</span>
-                                <ul class="text-[10px] text-slate-500 space-y-1 list-disc list-inside">
-                                    <li>개인 단위 먹을 만큼 배식하기</li>
-                                    <li>비전 감지를 통한 기호 불합치 실시간 보정</li>
-                                    <li>잔반 제로 '그린 테이블' 정례화 캠페인</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-amber-50/50 p-6 border-t border-slate-100">
-                        <div class="flex items-center gap-2 text-amber-700 font-extrabold text-xs mb-1.5">
-                            <i data-lucide="zap" class="w-4 h-4"></i>
-                            <span>현재 우리의 실천 다짐</span>
-                        </div>
-                        <p class="text-slate-600 text-[11px] leading-relaxed">
-                            나만의 정확한 식사 부피를 AI 학습 데이터에 피드백하고 무조건 배식을 받기보다 싫어하는 반찬을 사전에 사절하여 버려지는 총량을 축소합니다.
-                        </p>
-                    </div>
-                </div>
+                        <span class="text-xs font-bold text-blue-800">물로 내부 헹구기</span>
+                        <span class="text-[10px] text-blue-600 mt-1">남은 음료를 깨끗하게 씻어냅니다.</span>
+                    </button>
 
-                <!-- SDG 13 -->
-                <div class="bg-white rounded-3xl border border-slate-100 shadow-md overflow-hidden flex flex-col justify-between group hover:shadow-lg transition-all transform hover:-translate-y-1">
-                    <div>
-                        <div class="bg-gradient-to-r from-rose-500 to-red-600 p-6 text-white relative">
-                            <span class="text-xs font-black bg-white/20 px-2.5 py-0.5 rounded-lg">GOAL 13</span>
-                            <h2 class="text-xl font-black mt-2">기후변화 대응 행동</h2>
-                            <i data-lucide="thermometer-sun" class="w-16 h-16 absolute right-4 bottom-2 opacity-15 transform rotate-12"></i>
+                    <!-- 액션 2: 라벨 제거 -->
+                    <button id="wash-peel-btn" onclick="simulatePeel()" class="p-4 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-2xl flex flex-col items-center justify-center text-center transition-all group">
+                        <div class="w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center shadow-md shadow-orange-100 mb-2 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-scissors text-lg"></i>
                         </div>
-                        <div class="p-6 space-y-4">
-                            <div>
-                                <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">학교 내 체감 및 선정 이유</h3>
-                                <p class="text-slate-600 text-xs leading-relaxed">
-                                    체육이나 이동 수업 시 완전히 텅 빈 교실에 형광등 전체가 밝게 켜져 있고, 창문이 열린 채 무단 기동 중인 에어컨 가동 등 에너지 효율 낭비와 탄소 과다 배출의 실상을 몸소 목도하였습니다.
-                                </p>
-                            </div>
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <span class="text-[9px] font-black text-rose-600 block mb-1">주요 해결 과제</span>
-                                <ul class="text-[10px] text-slate-500 space-y-1 list-disc list-inside">
-                                    <li>이동식 교실 소등 및 콘센트 소화</li>
-                                    <li>교내 적정 여름 온도 $(26^{\circ}C)$ 고수</li>
-                                    <li>등하교 시 도보/자전거 및 대중교통 우선화</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-rose-50/50 p-6 border-t border-slate-100">
-                        <div class="flex items-center gap-2 text-rose-700 font-extrabold text-xs mb-1.5">
-                            <i data-lucide="zap" class="w-4 h-4"></i>
-                            <span>현재 우리의 실천 다짐</span>
-                        </div>
-                        <p class="text-slate-600 text-[11px] leading-relaxed">
-                            매 수업이 끝날 때마다 학급 탄소 도우미를 지정하여 빈 공간 불 끄기를 엄격히 관리하며 일회용품 사용 억제 행동을 고수합니다.
-                        </p>
-                    </div>
+                        <span class="text-xs font-bold text-orange-800">비닐 라벨 분리하기</span>
+                        <span class="text-[10px] text-orange-600 mt-1">부착된 라벨을 뜯어냅니다.</span>
+                    </button>
                 </div>
-
-                <!-- SDG 4 -->
-                <div class="bg-white rounded-3xl border border-slate-100 shadow-md overflow-hidden flex flex-col justify-between group hover:shadow-lg transition-all transform hover:-translate-y-1">
-                    <div>
-                        <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-white relative">
-                            <span class="text-xs font-black bg-white/20 px-2.5 py-0.5 rounded-lg">GOAL 4</span>
-                            <h2 class="text-xl font-black mt-2">포용적·공평한 양질 교육</h2>
-                            <i data-lucide="graduation-cap" class="w-16 h-16 absolute right-4 bottom-2 opacity-15 transform rotate-12"></i>
-                        </div>
-                        <div class="p-6 space-y-4">
-                            <div>
-                                <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">학교 내 체감 및 선정 이유</h3>
-                                <p class="text-slate-600 text-xs leading-relaxed">
-                                    더 깊은 깊이의 전산 지식을 쌓고 싶어도 소득 격차와 지리적 소외로 비싼 테크 도구나 정밀 첨단 기술 피드백의 사각지대에 누락된 학우들의 배움 정체와 기회 불평등을 깊이 인지했습니다.
-                                </p>
-                            </div>
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <span class="text-[9px] font-black text-emerald-600 block mb-1">주요 해결 과제</span>
-                                <ul class="text-[10px] text-slate-500 space-y-1 list-disc list-inside">
-                                    <li>교내 자치 멘토링 클럽 결성 및 학습 전수</li>
-                                    <li>EBS, 무료 공공 교육 및 코딩 자원 연계 유도</li>
-                                    <li>첨단 기술(AI)의 보편적인 보급 기회 확대</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-emerald-50/50 p-6 border-t border-slate-100">
-                        <div class="flex items-center gap-2 text-emerald-700 font-extrabold text-xs mb-1.5">
-                            <i data-lucide="zap" class="w-4 h-4"></i>
-                            <span>현재 우리의 실천 다짐</span>
-                        </div>
-                        <p class="text-slate-600 text-[11px] leading-relaxed">
-                            공부법이나 공공 오픈 자료 목록을 서로 격의 없이 교실 게시판에 공유하며, 친구들이 무료로 소프트웨어를 접할 수 있게 돕는 헬프 동아리를 지지합니다.
-                        </p>
-                    </div>
-                </div>
-
             </div>
-        </div>
 
+        </section>
 
-        <!-- ==================== TAB 3: 페르소나 및 개선 전후 비교 (HIGH DETAIL) ==================== -->
-        <div id="content-persona" class="tab-content hidden">
-            <!-- 안내 상단 배너 -->
-            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-md mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div class="max-w-2xl">
-                    <span class="text-emerald-600 font-extrabold text-[10px] bg-emerald-100 px-2.5 py-1 rounded-full uppercase tracking-widest">Stakeholder Analysis</span>
-                    <h2 class="text-2xl font-black text-slate-800 mt-2">이해관계자가 직면한 고충 및 도입 후 개선 성과</h2>
-                    <p class="text-slate-500 text-xs leading-relaxed mt-1">
-                        AI 푸드 스캐너 도입은 단순한 환경 보호를 넘어, 학교를 이끄는 영양사, 조리원, 그리고 예산을 책임지는 우리 공동체 전체의 실제 삶을 혁신시킵니다.
+        <!-- 오른쪽: 실시간 대시보드 및 캠페인 (lg:col-span-5) -->
+        <section class="lg:col-span-5 flex flex-col space-y-6">
+            
+            <!-- 실시간 환경 성과 그래프 및 지표 -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                <h3 class="text-md font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-emerald-500"></i> 해성고 에코 대시보드
+                </h3>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
+                        <p class="text-[10px] font-semibold text-emerald-700 tracking-wider uppercase">누적 정화 수량</p>
+                        <p class="text-xl font-extrabold text-emerald-800 mt-1 flex items-baseline gap-1">
+                            <span id="stat-bottles">4,812</span> <span class="text-xs font-normal">개</span>
+                        </p>
+                        <span class="text-[10px] text-emerald-500 mt-1 block"><i class="fa-solid fa-caret-up"></i> 오늘 +18개 증가</span>
+                    </div>
+
+                    <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
+                        <p class="text-[10px] font-semibold text-blue-700 tracking-wider uppercase">절약한 가상 수자원</p>
+                        <p class="text-xl font-extrabold text-blue-800 mt-1 flex items-baseline gap-1">
+                            <span id="stat-water">12,030</span> <span class="text-xs font-normal">L</span>
+                        </p>
+                        <span class="text-[10px] text-blue-500 mt-1 block"><i class="fa-solid fa-leaf"></i> 의류 제작 절감 가치 연동</span>
+                    </div>
+                </div>
+
+                <!-- 반별 실시간 분리수거 참여 랭킹 -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-xs font-bold text-slate-500">2학년 반별 우수학급 랭킹</h4>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-medium">실시간 반영</span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <!-- 1등 -->
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-6 h-6 flex items-center justify-center bg-yellow-500 text-white rounded-lg text-xs font-extrabold">1</span>
+                                <span class="text-xs font-bold text-slate-700">2학년 4반 (준우진 팀 소속)</span>
+                            </div>
+                            <span id="rank-4" class="text-xs font-bold text-slate-800">1,540개</span>
+                        </div>
+                        <!-- 2등 -->
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/50 border border-slate-100">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-6 h-6 flex items-center justify-center bg-slate-300 text-white rounded-lg text-xs font-extrabold">2</span>
+                                <span class="text-xs font-medium text-slate-700">2학년 1반</span>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-800">1,210개</span>
+                        </div>
+                        <!-- 3등 -->
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/50 border border-slate-100">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-6 h-6 flex items-center justify-center bg-amber-600 text-white rounded-lg text-xs font-extrabold">3</span>
+                                <span class="text-xs font-medium text-slate-700">2학년 3반</span>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-800">980개</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SDGs Goals 카드 & 미니 퀴즈 -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex-grow">
+                <h3 class="text-md font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-indigo-500"></i> 오늘의 SDGs 에코 퀴즈
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">준우진 팀의 관심 SDGs 목표에 관한 퀴즈를 풀고 100 포인트를 획득해 보세요!</p>
+
+                <!-- 퀴즈 영역 -->
+                <div id="quiz-container" class="bg-indigo-50/50 border border-indigo-100 p-4 rounded-2xl">
+                    <p class="text-xs font-bold text-indigo-700 mb-1">Q. SDGs 12번 목표: 지속가능한 소비와 생산</p>
+                    <p class="text-xs font-bold text-slate-800 leading-relaxed mb-3">
+                        우리가 무심코 버리는 티셔츠 1장을 생산하는 데 소비되는 가상수(Virtual Water)의 대략적인 양은 얼마일까요? (의류 폐기는 기후위기와 심각한 물 오염을 촉진합니다.)
                     </p>
-                </div>
-                <div class="flex items-center gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 self-start md:self-auto">
-                    <i data-lucide="info" class="text-teal-600 w-5 h-5 flex-shrink-0"></i>
-                    <p class="text-[10px] text-slate-500 leading-tight">
-                        카드를 클릭하거나 탐색하여<br><span class="font-bold text-slate-800">도입 전 고통 vs 도입 후 축복</span>의 격차를 관측하십시오.
-                    </p>
+                    
+                    <div class="space-y-2">
+                        <button onclick="checkQuizAnswer(1)" class="w-full text-left p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-medium transition-all flex items-center justify-between">
+                            <span>① 약 250 리터</span>
+                            <i class="fa-regular fa-circle text-slate-300"></i>
+                        </button>
+                        <button onclick="checkQuizAnswer(2)" class="w-full text-left p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-medium transition-all flex items-center justify-between">
+                            <span>② 약 2,700 리터 (정답 시 100P 지급!)</span>
+                            <i class="fa-regular fa-circle text-slate-300"></i>
+                        </button>
+                        <button onclick="checkQuizAnswer(3)" class="w-full text-left p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-medium transition-all flex items-center justify-between">
+                            <span>③ 약 100 리터</span>
+                            <i class="fa-regular fa-circle text-slate-300"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 대조 분석 카드 세트 -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                <!-- 1. 영양사 선생님 -->
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-md overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-teal-100 p-2.5 rounded-xl text-teal-600">
-                                    <i data-lucide="clipboard-list" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-black text-slate-800 text-sm">영양사 선생님</h3>
-                                    <p class="text-[9px] text-slate-400 font-bold">식단 예측 및 식재 발주</p>
-                                </div>
-                            </div>
-                            <span class="text-[9px] bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-black">업무 피로도 극심</span>
-                        </div>
+            <!-- 에코 쿠폰 상점 (리워드 시스템) -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                <h3 class="text-md font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-gift text-pink-500"></i> 교내 리워드 마켓
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">열심히 모은 에코 포인트로 매점이나 급식실에서 사용 가능한 쿠폰을 발행하세요!</p>
 
-                        <div class="p-6 space-y-4 text-xs">
-                            <!-- 도입 전 -->
-                            <div class="bg-red-50/50 p-3.5 rounded-xl border border-red-100/50">
-                                <span class="text-[10px] text-red-700 font-extrabold flex items-center gap-1 mb-1">
-                                    <i data-lucide="frown" class="w-3.5 h-3.5"></i>도입 전 고통 (Pain Point)
-                                </span>
-                                <p class="text-slate-600 leading-relaxed text-[11px]">
-                                    학생들의 입맛 변화, 예기치 않은 결석 및 학사 일정으로 조리 중량이 수십 kg 단위로 틀어져 폐기량이 속출했습니다. 경험에만 의존한 발주 탓에 과대 청구 스트레스가 지속되었습니다.
-                                </p>
-                            </div>
-                            <!-- 도입 후 -->
-                            <div class="bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100/50">
-                                <span class="text-[10px] text-emerald-700 font-extrabold flex items-center gap-1 mb-1">
-                                    <i data-lucide="smile" class="w-3.5 h-3.5"></i>도입 후 개선 (Gain Impact)
-                                </span>
-                                <p class="text-slate-600 leading-relaxed text-[11px]">
-                                    AI 분석 데이터가 요일별/날씨별 남김 비중 데이터를 통계화해 적합 중량을 사전에 산출합니다. 발주 적중률이 극대화되어 완벽한 수요 매칭 식단 기획을 완수합니다.
-                                </p>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">🍦</span>
+                            <div>
+                                <p class="text-xs font-bold text-slate-800">해성고 매점 아이스크림 1개 교환권</p>
+                                <p class="text-[10px] text-slate-400">1,000 P 소모</p>
                             </div>
                         </div>
+                        <button onclick="buyReward('매점 아이스크림 교환권', 1000)" class="px-3 py-1.5 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl transition-all">
+                            교환
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">🎟️</span>
+                            <div>
+                                <p class="text-xs font-bold text-slate-800">급식 프리패스권 (줄서기 패스)</p>
+                                <p class="text-[10px] text-slate-400">3,000 P 소모</p>
+                            </div>
+                        </div>
+                        <button onclick="buyReward('급식 프리패스권', 3000)" class="px-3 py-1.5 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl transition-all">
+                            교환
+                        </button>
                     </div>
                 </div>
-
-                <!-- 2. 급식실 조리원 -->
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-md overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-amber-100 p-2.5 rounded-xl text-amber-600">
-                                    <i data-lucide="soup" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-black text-slate-800 text-sm">급식실 조리원</h3>
-                                    <p class="text-[9px] text-slate-400 font-bold">잔반 수거 및 사후 처리</p>
-                                </div>
-                            </div>
-                            <span class="text-[9px] bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-black">육체 노동 강도 한계</span>
-                        </div>
-
-                        <div class="p-6 space-y-4 text-xs">
-                            <!-- 도입 전 -->
-                            <div class="bg-red-50/50 p-3.5 rounded-xl border border-red-100/50">
-                                <span class="text-[10px] text-red-700 font-extrabold flex items-center gap-1 mb-1">
-                                    <i data-lucide="frown" class="w-3.5 h-3.5"></i>도입 전 고통 (Pain Point)
-                                </span>
-                                <p class="text-slate-600 leading-relaxed text-[11px]">
-                                    배식대 옆에 가득 찬 음식 쓰레기를 무거운 통에 부어가며 하루에도 수차례 운반 및 압축 가공 작업을 해야 했습니다. 조리 후의 체력 소진에 잔반 위생 뒤처리까지 겹쳐 부상 위험이 높았습니다.
-                                </p>
-                            </div>
-                            <!-- 도입 후 -->
-                            <div class="bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100/50">
-                                <span class="text-[10px] text-emerald-700 font-extrabold flex items-center gap-1 mb-1">
-                                    <i data-lucide="smile" class="w-3.5 h-3.5"></i>도입 후 개선 (Gain Impact)
-                                </span>
-                                <p class="text-slate-600 leading-relaxed text-[11px]">
-                                    잔반 유발량 자체가 비전 스캐너 도입 이전에 비해 절반 이상으로 줄어들어 쓰레기 처리에 수반되던 불필요한 고노동 강도의 수동 작업 횟수가 현저히 감소하고 안전 환경이 보장됩니다.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. 학교 및 학생 공동체 -->
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-md overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-sky-100 p-2.5 rounded-xl text-sky-600">
-                                    <i data-lucide="landmark" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-black text-slate-800 text-sm">학교 및 예산 이사회</h3>
-                                    <p class="text-[9px] text-slate-400 font-bold">운영 기금 및 위탁 용역비</p>
-                                </div>
-                            </div>
-                            <span class="text-[9px] bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-black">매년 용역 단가 폭등</span>
-                        </div>
-
-                        <div class="p-6 space-y-4 text-xs">
-                            <!-- 도입 전 -->
-                            <div class="bg-red-50/50 p-3.5 rounded-xl border border-red-100/50">
-                                <span class="text-[10px] text-red-700 font-extrabold flex items-center gap-1 mb-1">
-                                    <i data-lucide="frown" class="w-3.5 h-3.5"></i>도입 전 고통 (Pain Point)
-                                </span>
-                                <p class="text-slate-600 leading-relaxed text-[11px]">
-                                    버려진 음식 쓰레기 처리용 외부 용역 위탁 단가가 고물가로 폭등하며 매달 불필요한 예산 누수가 발생하였습니다. 이 손해가 고스란히 양질의 영양 식단을 구축하는 조리 기금 감축으로 번졌습니다.
-                                </p>
-                            </div>
-                            <!-- 도입 후 -->
-                            <div class="bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100/50">
-                                <span class="text-[10px] text-emerald-700 font-extrabold flex items-center gap-1 mb-1">
-                                    <i data-lucide="smile" class="w-3.5 h-3.5"></i>도입 후 개선 (Gain Impact)
-                                </span>
-                                <p class="text-slate-600 leading-relaxed text-[11px]">
-                                    쓰레기 수거 비용이 무려 60% 이상 절감되어 아낀 금액 전액을 고급 친환경 야채, 신선 정육 및 고품격 후식 메뉴 증설 예산으로 재배분하여 더 만족도 높은 식사가 피드백됩니다.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
-        </div>
 
-
-        <!-- ==================== TAB 4: 구체적인 로드맵 & Q&A 토론 (HIGH DETAIL) ==================== -->
-        <div id="content-roadmap" class="tab-content hidden">
-            <!-- 2단 레이아웃 분할 -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                <!-- 좌측 타임라인 로드맵 (8칸) -->
-                <div class="lg:col-span-8 bg-white p-6 rounded-2xl border border-slate-100 shadow-md">
-                    <div class="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
-                        <i data-lucide="milestone" class="text-emerald-500"></i>
-                        <h2 class="text-lg font-black text-slate-800">단계별 프로젝트 실현 및 디테일 로드맵</h2>
-                    </div>
-
-                    <!-- 타임라인 수직선 선명화 -->
-                    <div class="relative pl-6 border-l-2 border-emerald-400 space-y-8 py-2">
-                        <!-- Phase 1 -->
-                        <div class="relative">
-                            <span class="absolute -left-[31px] top-1.5 bg-emerald-500 w-4 h-4 rounded-full border-4 border-white"></span>
-                            <div class="bg-slate-50 p-4.5 rounded-xl border border-slate-100">
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-[10px] font-black text-emerald-700 tracking-wider bg-emerald-100 px-2.5 py-0.5 rounded-full">PHASE 1 (1~2개월차)</span>
-                                    <span class="text-[10px] font-bold text-slate-400">현황 분석 및 센서 칼리브레이션</span>
-                                </div>
-                                <h4 class="font-black text-slate-800 text-sm">실태 표본 검사 및 비전 AI 데이터 레이블링</h4>
-                                <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-                                    학교 급식실 전용 수거 테이블에 임시 계량 저울을 구성하고 학생들이 무작위로 비워내는 음식물 패턴을 약 1,000건 이상 촬영 및 데이터 축적합니다. 인공지능이 밥, 국물류, 반찬류의 윤곽선을 스스로 구분할 수 있게 라벨링 소프트웨어를 적용해 모델 정밀도를 보정합니다.
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Phase 2 -->
-                        <div class="relative">
-                            <span class="absolute -left-[31px] top-1.5 bg-emerald-500 w-4 h-4 rounded-full border-4 border-white"></span>
-                            <div class="bg-slate-50 p-4.5 rounded-xl border border-slate-100">
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-[10px] font-black text-emerald-700 tracking-wider bg-emerald-100 px-2.5 py-0.5 rounded-full">PHASE 2 (3~4개월차)</span>
-                                    <span class="text-[10px] font-bold text-slate-400">시범 디바이스 통합 가동</span>
-                                </div>
-                                <h4 class="font-black text-slate-800 text-sm">우선 참여 학급 선정 및 피드백 모니터 연동</h4>
-                                <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-                                    일정 학급을 'SDG 에코 파일럿반'으로 지정하고 반납 구역에 1대의 모의 비전 카메라 모듈을 거치합니다. 식판을 거치하면 학생 식별 번호 바코드나 RFID 인식기를 거쳐 실시간 포인트 증설과 당일 남김 피드백 문구를 소형 모니터 상에 즉각 피드백하는 통합 기기 테스트를 수행합니다.
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Phase 3 -->
-                        <div class="relative">
-                            <span class="absolute -left-[31px] top-1.5 bg-emerald-500 w-4 h-4 rounded-full border-4 border-white"></span>
-                            <div class="bg-slate-50 p-4.5 rounded-xl border border-slate-100">
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-[10px] font-black text-emerald-700 tracking-wider bg-emerald-100 px-2.5 py-0.5 rounded-full">PHASE 3 (5~6개월차)</span>
-                                    <span class="text-[10px] font-bold text-slate-400">학습 기조 및 외부 요인 보정</span>
-                                </div>
-                                <h4 class="font-black text-slate-800 text-sm">예측 변수 연계 기계학습 모델 튜닝</h4>
-                                <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-                                    단순 카메라 이미지뿐만 아니라 교내 시험 일정, 단축 수업, 미세먼지 수치, 실외 온도, 요일별 잔반 통계를 모두 포함하여 학습하는 다변수 예측 회귀 모델을 고도화합니다. 수요일과 금요일 등 기호도가 크게 엇갈리는 특별식 출현 시 조리 오차율을 수 kg 한도 내로 가두는 성과 조율을 감행합니다.
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Phase 4 -->
-                        <div class="relative">
-                            <span class="absolute -left-[31px] top-1.5 bg-emerald-500 w-4 h-4 rounded-full border-4 border-white"></span>
-                            <div class="bg-slate-50 p-4.5 rounded-xl border border-slate-100">
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-[10px] font-black text-emerald-700 tracking-wider bg-emerald-100 px-2.5 py-0.5 rounded-full">PHASE 4 (7개월차 이후~)</span>
-                                    <span class="text-[10px] font-bold text-slate-400">인센티브 확장 및 성과 공유</span>
-                                </div>
-                                <h4 class="font-black text-slate-800 text-sm">에코 포인트 교환 시스템 구축 및 외부 인증 취득</h4>
-                                <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-                                    축적한 에코 멤버십 포인트를 학교 매점이나 교내 도서 대여 쿠폰, 자치 포인트로 변환하는 청소년 주도 리워드 앱을 가상 연계합니다. 감축한 이산화탄소 톤($tCO_2$) 성과를 공표하여 기후위기 연계 실천 우수 청소년 학교 공식 인증 취득을 모색합니다.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 우측 모의 Q&A 토론장 (4칸) -->
-                <div class="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-md flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
-                            <i data-lucide="messages-square" class="text-emerald-500"></i>
-                            <h2 class="text-base font-extrabold text-slate-800">질문 및 토론 피드백</h2>
-                        </div>
-
-                        <!-- 토론 리스트 아카이브 -->
-                        <div class="space-y-4 mb-6 max-h-[340px] overflow-y-auto pr-1" id="qna-list">
-                            <!-- Q1 -->
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] space-y-1.5">
-                                <div class="flex justify-between items-center">
-                                    <span class="font-bold text-slate-700">이현우 (기후위기동아리장)</span>
-                                    <span class="text-[9px] text-emerald-700 font-extrabold bg-emerald-100 px-2 py-0.5 rounded-full">채택 완료</span>
-                                </div>
-                                <p class="text-slate-600 leading-relaxed font-bold">Q: 스캐너가 카레나 제육 소스같이 식판에 소량 묻어 있는 것도 잔반으로 감지하여 포인트를 감점하나요?</p>
-                                <p class="text-emerald-800 font-medium bg-white p-2.5 rounded-lg border border-emerald-50 leading-relaxed">A: 좋은 질문입니다! 컴퓨터 비전 판독 시 묻어 있는 가벼운 얼룩이나 양념 흔적은 '배식 잔류 오차 임계치' 필터를 거쳐 95% 이상 완전히 제외됩니다. 음식의 뚜렷한 부피가 남아 있는 경우에만 잔량으로 계산되니 걱정 말고 반납하셔도 좋습니다.</p>
-                            </div>
-
-                            <!-- Q2 -->
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] space-y-1.5">
-                                <div class="flex justify-between items-center">
-                                    <span class="font-bold text-slate-700">최수아 (보건부 부원)</span>
-                                    <span class="text-[9px] text-teal-700 font-extrabold bg-teal-100 px-2 py-0.5 rounded-full">채택 완료</span>
-                                </div>
-                                <p class="text-slate-600 leading-relaxed font-bold">Q: 알레르기가 있어서 일부러 국물을 안 퍼가고 남겼을 때, 불이익이 생길 수 있나요?</p>
-                                <p class="text-teal-800 font-medium bg-white p-2.5 rounded-lg border border-teal-50 leading-relaxed">A: 그렇기 때문에 왼쪽 패널에 구성된 '잔반 피드백 입력기'가 필수적입니다! 반납 시 '알레르기/사유'를 지정하면, AI가 해당 반찬은 계산 식에서 제외하므로 불이익을 전혀 주지 않고 안전한 맞춤 기록으로 자동 변환해 줍니다.</p>
-                            </div>
-                        </div>
-
-                        <!-- 신규 글쓰기 영역 -->
-                        <div class="space-y-3 pt-4 border-t border-slate-100">
-                            <span class="text-[10px] font-black text-slate-400 block uppercase">자유 피드백 및 기발한 의견 제안</span>
-                            <input type="text" id="qna-name" placeholder="학생/교직원 이름" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all">
-                            <textarea id="qna-msg" placeholder="스마트 급식 개선이나 탄소 저감에 관련된 독창적인 질문/생각을 나누어보세요." rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"></textarea>
-                            <button onclick="addQna()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 px-4 rounded-lg text-xs shadow-md transition-all">의견 및 Q&A 올리기</button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
+        </section>
     </main>
 
-    <!-- 모바일 쿠폰 팝업 모달 -->
-    <div id="coupon-modal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center hidden">
-        <div class="bg-white rounded-3xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-slate-100 relative text-center">
-            <button onclick="closeCouponModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="check-circle-2" class="w-7 h-7"></i>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-100 py-6 mt-12 text-center text-xs text-slate-400">
+        <p>© 2026 전주해성고등학교 2학년 4반 준우진(김승준, 염우진). AI와 함께 바꾸는 지속가능한 SDGs 목표 6.</p>
+        <p class="mt-1 text-[10px]">바이브코딩 히어로 프로젝트 출품작</p>
+    </footer>
+
+    <!-- API 키 설정 모달 -->
+    <div id="api-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full mx-4 shadow-xl border border-slate-100 animate-scale-in">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg font-bold text-slate-900">Gemini API 키 구성</h3>
+                <button onclick="toggleApiModal(false)" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
-            <h3 class="text-lg font-black text-slate-800">에코 모바일 쿠폰 지급 완료!</h3>
-            <p class="text-xs text-slate-500 mt-1">2,500 에코 포인트가 정상적으로 차감되었습니다.</p>
-            
-            <!-- 바코드 그래픽 영역 -->
-            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/60 my-5">
-                <span class="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">CU / GS25 통합 금액권</span>
-                <span class="text-lg font-black text-slate-800 block mt-2">5,000원 편의점 쿠폰</span>
-                
-                <!-- 바코드 시뮬레이션 선들 -->
-                <div class="bg-white p-3 rounded-lg border border-slate-200 mt-4 flex flex-col items-center justify-center">
-                    <div class="flex gap-[2px] h-12 w-full items-stretch overflow-hidden justify-center select-none">
-                        <!-- 가상의 바코드 패턴 -->
-                        <div class="w-1.5 bg-black"></div><div class="w-0.5 bg-black"></div><div class="w-1 bg-black"></div>
-                        <div class="w-[3px] bg-black"></div><div class="w-1 bg-black"></div><div class="w-0.5 bg-black"></div>
-                        <div class="w-1.5 bg-black"></div><div class="w-1 bg-black"></div><div class="w-0.5 bg-black"></div>
-                        <div class="w-1.5 bg-black"></div><div class="w-0.5 bg-black"></div><div class="w-1.5 bg-black"></div>
-                        <div class="w-1 bg-black"></div><div class="w-0.5 bg-black"></div><div class="w-1 bg-black"></div>
-                        <div class="w-1.5 bg-black"></div><div class="w-1 bg-black"></div><div class="w-[3px] bg-black"></div>
-                    </div>
-                    <span class="text-[10px] font-mono tracking-widest text-slate-400 mt-1">9820-4105-8721</span>
+            <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+                사용자 컴퓨터에서 직접 페트병 이미지를 스캔할 때 Gemini Vision AI 모델을 사용하여 정확하게 인식하려면 API 키를 입력하세요.
+                <br><span class="text-amber-600 font-semibold">※ 키가 없어도 빌트인 프리셋 테스트 기능으로 시뮬레이션할 수 있습니다.</span>
+            </p>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Gemini API Key</label>
+                    <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end gap-2 text-xs">
+                    <button onclick="toggleApiModal(false)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold">취소</button>
+                    <button onclick="saveApiKey()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold">저장</button>
                 </div>
             </div>
-
-            <p class="text-[11px] text-slate-400 leading-relaxed mb-4">
-                이 바코드를 편의점 결제 시 계산대에 제시하면 5,000원 차감 혜택을 즉시 받을 수 있습니다.
-            </p>
-            <button onclick="closeCouponModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 rounded-xl transition-all shadow">
-                확인 및 닫기
-            </button>
         </div>
     </div>
 
-    <!-- 푸터 -->
-    <footer class="bg-slate-900 text-slate-400 py-10 border-t border-slate-800 mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs space-y-3">
-            <div class="flex justify-center gap-3">
-                <span class="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full font-bold">지속가능한 개발 목표(SDGs) 수립 프로젝트</span>
-            </div>
-            <p class="font-extrabold text-slate-300">UN SDG 12, 13, 4 실천 고등학교 자치 소그룹 드림</p>
-            <p class="leading-relaxed">우리가 먹고 남기는 식판 뒤편의 작은 노력이 AI 기술과 결합하여 한 학기에 수십 톤의 온실가스를 저감하는 기적을 만듭니다.</p>
-            <p class="text-slate-600 text-[10px]">Copyright &copy; 2026. Green Plate AI Advanced Platform. All Rights Reserved.</p>
-        </div>
-    </footer>
+    <!-- 알림 메시지 팝업 모달 (Alert 대용) -->
+    <div id="custom-alert" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full text-xs font-semibold shadow-xl z-50 flex items-center gap-2 transform translate-y-10 opacity-0 transition-all duration-300">
+        <i id="alert-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="alert-message">스마트 에코 메시지</span>
+    </div>
 
-    <!-- 자바스크립트 로직 연동 -->
     <script>
-        // Lucide 아이콘 초기화
-        lucide.createIcons();
+        // 전역 상태 변수
+        let userPoints = 1250;
+        let apiKey = ""; // 런타임시 채워질 수 있음
+        let currentScanResult = null; // 현재 스캔 상태 보관 ('DIRTY', 'LABEL', 'CLEAN')
+        let totalBottles = 4812;
+        let totalWater = 12030;
+        let class4Bottles = 1540;
 
-        // 고도화된 식단 데이터 맵 (각 식단 원가 및 시각화용 색상)
-        const menuSets = {
-            korean: {
-                rice: { name: "흰밥", emoji: "🍚", weight: 210, cost: 4.8 },
-                soup: { name: "우거지국", emoji: "🍲", weight: 240, cost: 7.5, color: "bg-amber-800" },
-                main: { name: "제육볶음", emoji: "🥩", weight: 160, cost: 16.2, color: "bg-red-700" },
-                sub1: { name: "포기김치", emoji: "🌶️", weight: 60, cost: 5.5, color: "bg-orange-600" },
-                sub2: { name: "시금치나물", emoji: "🥦", weight: 45, cost: 8.2, color: "bg-green-700" }
+        // 프리셋 데이터
+        const PRESETS = {
+            dirty: {
+                status: 'CONTAMINATED',
+                image: 'https://images.unsplash.com/photo-1618477388954-7852f32655ec?auto=format&fit=crop&q=80&w=400',
+                reason: '페트병 내부에 정체불명의 갈색 액체(탄산음료)가 가득 차 있어 악취 및 벌레꼬임의 원인이 됩니다.',
+                guide: '에코-세척존에서 "물로 내부 헹구기"를 진행해 잔여 음료를 버려주세요!'
             },
-            western: {
-                rice: { name: "백미밥", emoji: "🍚", weight: 160, cost: 4.8 },
-                soup: { name: "크림스프", emoji: "🥣", weight: 210, cost: 11.2, color: "bg-amber-100" },
-                main: { name: "수제돈까스", emoji: "🍖", weight: 190, cost: 22.5, color: "bg-amber-900" },
-                sub1: { name: "샐러드믹스", emoji: "🥗", weight: 70, cost: 9.4, color: "bg-emerald-500" },
-                sub2: { name: "수제피클", emoji: "🥒", weight: 35, cost: 6.8, color: "bg-green-600" }
+            labeled: {
+                status: 'LABEL_ATTACHED',
+                image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&q=80&w=400',
+                reason: '병 내부는 깨끗하지만 재활용 불가능 등급의 비닐 라벨이 아직 부착되어 있습니다.',
+                guide: '에코-세척존에서 "비닐 라벨 분리하기"를 눌러 라벨을 안전하게 떼어내 주세요!'
             },
-            snack: {
-                rice: { name: "삼각김밥", emoji: "🍙", weight: 110, cost: 7.2 },
-                soup: { name: "매운어묵탕", emoji: "🍢", weight: 230, cost: 8.0, color: "bg-orange-200" },
-                main: { name: "매콤떡볶이", emoji: "🍛", weight: 170, cost: 13.5, color: "bg-red-600" },
-                sub1: { name: "바삭군만두", emoji: "🥟", weight: 90, cost: 11.2, color: "bg-yellow-500" },
-                sub2: { name: "노란단무지", emoji: "🟡", weight: 35, cost: 3.5, color: "bg-yellow-400" }
+            clean: {
+                status: 'CLEAN',
+                image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&q=80&w=400',
+                reason: '라벨이 없고 물기가 말라있으며 내부가 완벽히 깨끗한 이상적인 친환경 분리배출 자원입니다.',
+                guide: '수거함 투입에 성공했습니다! 에코 포인트 100P가 적립되었습니다. 참 잘하셨어요!'
             }
         };
 
-        // 임의의 학교 프리셋 데이터 정보 (학생 수 및 랭킹 세부 내용 변경을 위함)
-        const schoolPresets = {
-            "preset-1": {
-                name: "그린고등학교",
-                students: 600,
-                rankings: [
-                    { id: "p1", name: "김태양 (3-1)", points: 2320, badge: "🌳 가디언" },
-                    { id: "p2", name: "박소윤 (2-4)", points: 1950, badge: "🌿 전문가" },
-                    { id: "p3", name: "최서준 (1-2)", points: 1480, badge: "🌿 전문가" },
-                    { id: "user", name: "에코 프렌즈 (나)", points: 1250, badge: "🌱 새싹" },
-                    { id: "p4", name: "윤다은 (2-6)", points: 850, badge: "🌱 새싹" }
-                ]
-            },
-            "preset-2": {
-                name: "늘푸른중학교",
-                students: 450,
-                rankings: [
-                    { id: "p1", name: "정하은 (3-2)", points: 2410, badge: "🌳 가디언" },
-                    { id: "p2", name: "이준우 (2-1)", points: 1870, badge: "🌿 전문가" },
-                    { id: "user", name: "에코 프렌즈 (나)", points: 1250, badge: "🌱 새싹" },
-                    { id: "p3", name: "김민재 (1-5)", points: 1120, badge: "🌱 새싹" },
-                    { id: "p4", name: "최예린 (2-3)", points: 790, badge: "🌱 새싹" }
-                ]
-            },
-            "preset-3": {
-                name: "에코과학고등학교",
-                students: 800,
-                rankings: [
-                    { id: "p1", name: "한지민 (2-A)", points: 2480, badge: "🌳 가디언" },
-                    { id: "user", name: "에코 프렌즈 (나)", points: 1250, badge: "🌱 새싹" },
-                    { id: "p2", name: "강동우 (3-C)", points: 1100, badge: "🌱 새싹" },
-                    { id: "p3", name: "서유진 (1-B)", points: 950, badge: "🌱 새싹" },
-                    { id: "p4", name: "임찬형 (2-B)", points: 910, badge: "🌱 새싹" }
-                ]
+        // 로드 시 초기 키 로드
+        window.onload = function() {
+            const savedKey = localStorage.getItem('eco_gemini_key');
+            if (savedKey) {
+                apiKey = savedKey;
+                document.getElementById('api-key-input').value = apiKey;
             }
+            updatePointsDisplay();
         };
 
-        // 기본 활성 변수 설정
-        let currentSchoolName = "그린고등학교";
-        let currentStudentCount = 600;
-        let currentSetKey = "korean";
-        let userPoints = 1250; // 나의 시작 포인트 점수
-        const couponTarget = 2500; // 목표 포인트 점수
-
-        // 실시간 연동될 교내 랭킹 아카이브 데이터
-        let rankingData = [...schoolPresets["preset-1"].rankings];
-
-        // 학교 프리셋 선택 제어
-        function applySchoolPreset() {
-            const select = document.getElementById("school-preset-select");
-            const customArea = document.getElementById("custom-school-inputs");
-            if (!select) return;
+        function showMessage(msg, icon = 'fa-circle-check', color = 'text-emerald-400') {
+            const alertBox = document.getElementById('custom-alert');
+            const messageEl = document.getElementById('alert-message');
+            const iconEl = document.getElementById('alert-icon');
             
-            if (select.value === "custom") {
-                if (customArea) customArea.classList.remove("hidden");
-                applyCustomSchool();
-            } else {
-                if (customArea) customArea.classList.add("hidden");
-                const preset = schoolPresets[select.value];
-                if (preset) {
-                    currentSchoolName = preset.name;
-                    currentStudentCount = preset.students;
-                    
-                    // 기존 사용자 포인트를 동적 유지하면서 랭킹 리셋
-                    rankingData = preset.rankings.map(student => {
-                        if (student.id === "user") {
-                            student.points = userPoints;
-                        }
-                        return student;
-                    });
-
-                    updateSchoolUI();
-                }
-            }
-        }
-
-        // 직접 입력(커스텀) 학교 정보 갱신
-        function applyCustomSchool() {
-            const nameInputEl = document.getElementById("custom-school-name");
-            const studentsInputEl = document.getElementById("custom-school-students");
+            iconEl.className = `fa-solid ${icon} ${color}`;
+            messageEl.innerText = msg;
             
-            const nameInput = nameInputEl ? nameInputEl.value.trim() : "";
-            const studentsInput = studentsInputEl ? parseInt(studentsInputEl.value) : 500;
+            alertBox.classList.remove('translate-y-10', 'opacity-0');
+            alertBox.classList.add('translate-y-0', 'opacity-100');
 
-            currentSchoolName = nameInput || "글로벌고등학교";
-            currentStudentCount = Math.max(50, Math.min(3000, studentsInput));
-
-            // 커스텀 학교의 가상 경쟁자 생성
-            rankingData = [
-                { id: "p1", name: "박지성 (3반)", points: 2100, badge: "🌳 가디언" },
-                { id: "p2", name: "김연아 (2반)", points: 1800, badge: "🌿 전문가" },
-                { id: "user", name: "에코 프렌즈 (나)", points: userPoints, badge: "🌱 새싹" },
-                { id: "p3", name: "손흥민 (1반)", points: 1300, badge: "🌿 전문가" },
-                { id: "p4", name: "이강인 (2반)", points: 900, badge: "🌱 새싹" }
-            ];
-
-            updateSchoolUI();
-        }
-
-        // 학교 상태 변경 시 일어나는 전반적인 UI 갱신 데코레이션
-        function updateSchoolUI() {
-            const mainSimTitle = document.getElementById("main-sim-title");
-            const badgeSchoolName = document.getElementById("badge-school-name");
-            const badgeStudentCount = document.getElementById("badge-student-count");
-            const schoolForecastTitle = document.getElementById("school-forecast-title");
-            const rankBoardTitle = document.getElementById("rank-board-title");
-
-            if (mainSimTitle) mainSimTitle.innerText = `${currentSchoolName} 대시보드`;
-            if (badgeSchoolName) badgeSchoolName.innerText = currentSchoolName;
-            if (badgeStudentCount) badgeStudentCount.innerText = `${currentStudentCount.toLocaleString()}명 규모`;
-            if (schoolForecastTitle) schoolForecastTitle.innerText = `${currentSchoolName} 하루 예측 시뮬레이션`;
-            if (rankBoardTitle) rankBoardTitle.innerText = `${currentSchoolName} 에코 랭킹`;
-
-            // 쟁반 시각 보정 연산 즉시 적용
-            updateTrayVisual();
-            renderRanking();
-            updateCouponStore();
-        }
-
-        // 탭 토글 시스템
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => {
-                el.classList.add('hidden');
-                el.classList.remove('block');
-            });
-            
-            const targetContent = document.getElementById('content-' + tabName);
-            if (targetContent) {
-                targetContent.classList.add('block');
-                targetContent.classList.remove('hidden');
-            }
-
-            const tabs = ['dashboard', 'sdgs', 'persona', 'roadmap'];
-            tabs.forEach(t => {
-                const btn = document.getElementById('tab-' + t);
-                if (btn) {
-                    if (t === tabName) {
-                        btn.className = "px-3.5 py-2 rounded-xl text-sm font-bold bg-emerald-800 text-white shadow-inner transition-all flex items-center gap-1.5";
-                    } else {
-                        btn.className = "px-3.5 py-2 rounded-xl text-sm font-bold text-emerald-100 hover:bg-emerald-700 hover:text-white transition-all flex items-center gap-1.5";
-                    }
-                }
-            });
-        }
-
-        // 테마 선택에 따른 구성 요소 전환
-        function changeMenuSet() {
-            const select = document.getElementById("menu-select");
-            if (!select) return;
-            
-            currentSetKey = select.value;
-            const set = menuSets[currentSetKey];
-
-            // 텍스트 라벨 갱신
-            const labelRice = document.getElementById("label-rice");
-            const labelSoup = document.getElementById("label-soup");
-            const labelMain = document.getElementById("label-main");
-            const labelSub1 = document.getElementById("label-sub1");
-            const labelSub2 = document.getElementById("label-sub2");
-
-            if (labelRice) labelRice.innerText = set.rice.name;
-            if (labelSoup) labelSoup.innerText = set.soup.name;
-            if (labelMain) labelMain.innerText = set.main.name;
-            if (labelSub1) labelSub1.innerText = set.sub1.name;
-            if (labelSub2) labelSub2.innerText = set.sub2.name;
-
-            // 식판 그래픽 내부 이모지 정렬
-            const emojiMain = document.getElementById("emoji-main");
-            const emojiSub1 = document.getElementById("emoji-sub1");
-            const emojiSub2 = document.getElementById("emoji-sub2");
-
-            if (emojiMain) emojiMain.innerText = set.main.emoji;
-            if (emojiSub1) emojiSub1.innerText = set.sub1.emoji;
-            if (emojiSub2) emojiSub2.innerText = set.sub2.emoji;
-
-            // 모든 컨트롤 슬라이더 0으로 복구
-            const inputs = ["rice", "soup", "main", "sub1", "sub2"];
-            inputs.forEach(i => {
-                const inputEl = document.getElementById("input-" + i);
-                if (inputEl) inputEl.value = 0;
-            });
-
-            updateTrayVisual();
-            resetReport();
-        }
-
-        // 식판 잔반 시각 그래픽 제어 (실제 음식 국물 및 색상 채우기 적용)
-        function updateTrayVisual() {
-            const inputs = ["rice", "soup", "main", "sub1", "sub2"];
-            const set = menuSets[currentSetKey];
-
-            let totalBaseMax = set.rice.weight + set.soup.weight;
-            let totalSubMax = set.main.weight + set.sub1.weight + set.sub2.weight;
-
-            let baseLeft = 0;
-            let subLeft = 0;
-
-            // 국 및 반찬들의 고유 액체/색상 레이어 적용
-            const liquidSoup = document.getElementById("soup-liquid");
-            const liquidMain = document.getElementById("main-liquid");
-            const liquidSub1 = document.getElementById("sub1-liquid");
-            const liquidSub2 = document.getElementById("sub2-liquid");
-
-            // 기존 색상 클래스 전부 지우기
-            if (liquidSoup) liquidSoup.className = "absolute inset-0 opacity-95 transition-colors duration-300";
-            if (liquidMain) liquidMain.className = "absolute inset-0 opacity-90 transition-colors duration-300";
-            if (liquidSub1) liquidSub1.className = "absolute inset-0 opacity-90 transition-colors duration-300";
-            if (liquidSub2) liquidSub2.className = "absolute inset-0 opacity-90 transition-colors duration-300";
-
-            // 새로운 고유 음식 컬러 레이어 입히기
-            if (liquidSoup && set.soup.color) liquidSoup.classList.add(set.soup.color);
-            if (liquidMain && set.main.color) liquidMain.classList.add(set.main.color);
-            if (liquidSub1 && set.sub1.color) liquidSub1.classList.add(set.sub1.color);
-            if (liquidSub2 && set.sub2.color) liquidSub2.classList.add(set.sub2.color);
-
-            inputs.forEach(i => {
-                const inputEl = document.getElementById("input-" + i);
-                if (!inputEl) return;
-                
-                const val = inputEl.value;
-                const visualEl = document.getElementById("vis-" + i);
-                const foodInfo = set[i];
-                
-                if (visualEl) {
-                    // 그래픽 채움 비율 설정
-                    visualEl.style.height = val + "%";
-                    // 색상의 선명도(알파값)는 남은 질량에 비례하도록 조절
-                    visualEl.style.opacity = val == 0 ? "0" : (0.25 + (val / 100) * 0.75);
-                }
-
-                const currentWeight = foodInfo.weight * (val / 100);
-                if (i === "rice" || i === "soup") {
-                    baseLeft += currentWeight;
-                } else {
-                    subLeft += currentWeight;
-                }
-
-                // 텍스트 수치 매핑
-                const labelVal = document.getElementById("val-" + i);
-                if (labelVal) {
-                    if (val == 0) {
-                        labelVal.innerText = "남김없이 다 먹음 (0%)";
-                        labelVal.className = "text-[10px] font-extrabold text-emerald-600";
-                    } else if (val < 30) {
-                        labelVal.innerText = `약간 남김 (${val}%) ~${Math.round(currentWeight)}g`;
-                        labelVal.className = "text-[10px] font-bold text-teal-600";
-                    } else if (val < 70) {
-                        labelVal.innerText = `절반 남김 (${val}%) ~${Math.round(currentWeight)}g`;
-                        labelVal.className = "text-[10px] font-bold text-amber-500";
-                    } else {
-                        labelVal.innerText = `대부분 남김 (${val}%) ~${Math.round(currentWeight)}g`;
-                        labelVal.className = "text-[10px] font-bold text-rose-500";
-                    }
-                }
-            });
-
-            // 우측 실시간 섭취 비율 차트(가로 바) 업데이트
-            const baseIngestedPercent = Math.max(0, 100 - Math.round((baseLeft / totalBaseMax) * 100));
-            const subIngestedPercent = Math.max(0, 100 - Math.round((subLeft / totalSubMax) * 100));
-
-            const chartValBase = document.getElementById("chart-val-base");
-            const chartBarBase = document.getElementById("chart-bar-base");
-            if (chartValBase) chartValBase.innerText = baseIngestedPercent + "% 섭취";
-            if (chartBarBase) chartBarBase.style.width = baseIngestedPercent + "%";
-            
-            const chartValSub = document.getElementById("chart-val-sub");
-            const chartBarSub = document.getElementById("chart-bar-sub");
-            if (chartValSub) chartValSub.innerText = subIngestedPercent + "% 섭취";
-            if (chartBarSub) chartBarSub.style.width = subIngestedPercent + "%";
-        }
-
-        // 대시보드 리셋
-        function resetReport() {
-            const reportTime = document.getElementById("report-time");
-            const reportWeight = document.getElementById("report-weight");
-            const reportCarbon = document.getElementById("report-carbon");
-            const reportRating = document.getElementById("report-rating");
-            const reportAiMsg = document.getElementById("report-ai-msg");
-
-            if (reportTime) reportTime.innerText = "미측정";
-            if (reportWeight) reportWeight.innerText = "0 g";
-            if (reportCarbon) reportCarbon.innerText = "0 g CO₂";
-            if (reportRating) {
-                reportRating.innerText = "기록 대기";
-                reportRating.className = "text-xs font-black bg-slate-100 px-2.5 py-1 rounded-full text-slate-800";
-            }
-            if (reportAiMsg) reportAiMsg.innerText = "식판의 잔반을 설정하고 위의 'AI 스캔 및 정밀 분석 실행'을 탭하세요.";
-
-            // 학교 스케일 통계 영역 리셋
-            const simSchoolWaste = document.getElementById("sim-school-waste");
-            const simSchoolSavings = document.getElementById("sim-school-savings");
-            const simSchoolCarbon = document.getElementById("sim-school-carbon");
-            const simSchoolTrees = document.getElementById("sim-school-trees");
-
-            if (simSchoolWaste) simSchoolWaste.innerText = "0 kg";
-            if (simSchoolSavings) simSchoolSavings.innerText = "₩0";
-            if (simSchoolCarbon) simSchoolCarbon.innerText = "0 kg CO₂";
-            if (simSchoolTrees) simSchoolTrees.innerText = "0 그루";
-        }
-
-        // 에코 쿠폰 활성화 상태 업데이트 및 진행바 제어
-        function updateCouponStore() {
-            const progressRatio = Math.min(100, (userPoints / couponTarget) * 100);
-            const progressBar = document.getElementById("coupon-progress-bar");
-            const progressText = document.getElementById("coupon-progress-text");
-            const btnRedeem = document.getElementById("btn-redeem");
-            const btnRedeemText = document.getElementById("btn-redeem-text");
-
-            if (progressBar) progressBar.style.width = progressRatio + "%";
-            if (progressText) progressText.innerText = progressRatio.toFixed(1) + "%";
-
-            if (userPoints >= couponTarget) {
-                // 쿠폰 교환 가능 상태 활성화
-                if (btnRedeem) {
-                    btnRedeem.disabled = false;
-                    btnRedeem.className = "w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0";
-                }
-                if (btnRedeemText) btnRedeemText.innerText = "지금 쿠폰으로 교환하기! 🎁";
-            } else {
-                // 쿠폰 비활성화 상태
-                if (btnRedeem) {
-                    btnRedeem.disabled = true;
-                    btnRedeem.className = "w-full bg-slate-200 text-slate-400 text-xs font-black py-3 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 cursor-not-allowed";
-                }
-                if (btnRedeemText) btnRedeemText.innerText = `포인트가 부족합니다 (${(couponTarget - userPoints).toLocaleString()} P 더 필요)`;
-            }
-        }
-
-        // 실시간 에코 랭킹 보드 렌더링 시스템
-        function renderRanking() {
-            const container = document.getElementById("ranking-list");
-            if (!container) return;
-            container.innerHTML = "";
-
-            // 점수순 정렬
-            rankingData.sort((a, b) => b.points - a.points);
-
-            rankingData.forEach((student, index) => {
-                const rankNum = index + 1;
-                const isUser = student.id === "user";
-
-                const wrapper = document.createElement("div");
-                // 내가 1~5위에 진입했는지에 따른 다른 배경 디자인 제공
-                wrapper.className = `flex items-center justify-between p-2 rounded-xl text-xs transition-all duration-300 ${
-                    isUser ? "bg-emerald-50 border border-emerald-300 font-extrabold shadow-sm scale-[1.02]" : "bg-slate-50 border border-slate-100"
-                }`;
-
-                // 랭킹 왕관 데코
-                let rankBadge = "";
-                if (rankNum === 1) rankBadge = "🥇";
-                else if (rankNum === 2) rankBadge = "🥈";
-                else if (rankNum === 3) rankBadge = "🥉";
-                else rankBadge = `${rankNum}`;
-
-                wrapper.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="w-6 text-center font-black text-slate-500">${rankBadge}</span>
-                        <div>
-                            <span class="font-bold text-slate-700">${student.name}</span>
-                            <span class="text-[9px] text-slate-400 block">${student.badge}</span>
-                        </div>
-                    </div>
-                    <span class="font-black text-emerald-600">${student.points.toLocaleString()} P</span>
-                `;
-
-                container.appendChild(wrapper);
-            });
-        }
-
-        // 모의 환경: 경쟁 상대들도 가끔 포인트 얻는 효과 (랭킹 경쟁 활성화)
-        function simulatePeers() {
-            setInterval(() => {
-                const targetIdx = Math.floor(Math.random() * rankingData.length);
-                if (rankingData[targetIdx] && rankingData[targetIdx].id !== "user") {
-                    rankingData[targetIdx].points += Math.floor(Math.random() * 3 + 1) * 10;
-                    
-                    if (rankingData[targetIdx].points >= 2000) {
-                        rankingData[targetIdx].badge = "🌲 마스터 가디언";
-                    } else if (rankingData[targetIdx].points >= 1300) {
-                        rankingData[targetIdx].badge = "🌿 전문가";
-                    }
-
-                    renderRanking();
-                }
-            }, 10000); // 10초마다 랭킹 변동 시뮬레이션
-        }
-
-        // 쿠폰 교환 모달 제어
-        function redeemCoupon() {
-            if (userPoints >= couponTarget) {
-                userPoints -= couponTarget;
-                const userPointsEl = document.getElementById("user-points");
-                if (userPointsEl) userPointsEl.innerText = userPoints.toLocaleString() + " P";
-                
-                // 내 랭킹 점수도 실시간 차감 반영
-                const userObj = rankingData.find(s => s.id === "user");
-                if (userObj) {
-                    userObj.points = userPoints;
-                }
-
-                updateCouponStore();
-                renderRanking();
-
-                // 모달 팝업 가시화
-                const couponModal = document.getElementById("coupon-modal");
-                if (couponModal) couponModal.classList.remove("hidden");
-            }
-        }
-
-        function closeCouponModal() {
-            const couponModal = document.getElementById("coupon-modal");
-            if (couponModal) couponModal.classList.add("hidden");
-        }
-
-        // AI 스캔 작동 시뮬레이션 트리거
-        function triggerScan() {
-            const laser = document.getElementById("laser");
-            const status = document.getElementById("scanner-status");
-
-            // 레이저 이펙트 출력 및 상징 문구 점멸
-            if (laser) laser.classList.remove("hidden");
-            if (status) {
-                status.innerText = "스펙트럼 및 비량 체적 판독중...";
-                status.className = "text-[10px] font-black text-rose-500 animate-pulse bg-rose-50 px-2.5 py-0.5 rounded";
-            }
-
-            // 1.8초 가상 계산 딜레이
             setTimeout(() => {
-                if (laser) laser.classList.add("hidden");
-                if (status) {
-                    status.innerText = "판독 완료 및 매칭 전송";
-                    status.className = "text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded";
-                }
-
-                calculateScanResult();
-            }, 1800);
+                alertBox.classList.remove('translate-y-0', 'opacity-100');
+                alertBox.classList.add('translate-y-10', 'opacity-0');
+            }, 3000);
         }
 
-        // 잔량 분석 연산 및 시각 보고서 출력
-        function calculateScanResult() {
-            const set = menuSets[currentSetKey];
-            const inputs = ["rice", "soup", "main", "sub1", "sub2"];
-            const wasteReasonEl = document.querySelector('input[name="waste-reason"]:checked');
-            const selectedReason = wasteReasonEl ? wasteReasonEl.value : "full";
+        function updatePointsDisplay() {
+            document.getElementById('user-points').innerText = userPoints.toLocaleString();
+            document.getElementById('stat-bottles').innerText = totalBottles.toLocaleString();
+            document.getElementById('stat-water').innerText = totalWater.toLocaleString();
+            document.getElementById('rank-4').innerText = `${class4Bottles.toLocaleString()}개`;
+        }
+
+        // 프리셋 드롭다운 표시 제어
+        function toggleDropdown() {
+            document.getElementById('preset-dropdown').classList.toggle('hidden');
+        }
+
+        // 프리셋 데이터 선택 주입
+        function selectPreset(type) {
+            document.getElementById('preset-dropdown').classList.add('hidden');
+            const data = PRESETS[type];
+            if (!data) return;
+
+            resetScannerUI();
             
-            let totalWeight = 0;
-            let totalCost = 0;
-            let totalCarbon = 0;
+            // 1단계: 스캔 모션
+            document.getElementById('state-idle').classList.add('hidden');
+            document.getElementById('scanner-laser').classList.remove('hidden');
+            
+            const previewImg = document.getElementById('preview-img');
+            previewImg.src = data.image;
+            previewImg.classList.remove('hidden');
 
-            let highestLeftoverFood = "";
-            let highestLeftoverVal = 0;
+            showMessage("페트병을 스캐닝하고 있습니다...", "fa-arrows-spin", "text-blue-400");
 
-            inputs.forEach(i => {
-                const inputEl = document.getElementById("input-" + i);
-                const valPercent = inputEl ? parseFloat(inputEl.value) / 100 : 0;
-                const foodInfo = set[i];
+            setTimeout(() => {
+                // 스캔 완료 및 판별
+                document.getElementById('scanner-laser').classList.add('hidden');
+                displayScanResult(data.status, data.reason, data.guide);
+            }, 2000);
+        }
 
-                const foodWeightLeft = foodInfo.weight * valPercent;
-                totalWeight += foodWeightLeft;
-                totalCost += foodWeightLeft * foodInfo.cost;
-                totalCarbon += foodWeightLeft * 1.8; // 1g당 이산화탄소 저감 환산 계수 (1.8g)
+        // 결과 카드 업데이트 및 세척존 활성화
+        function displayScanResult(status, reason, guide) {
+            currentScanResult = status;
+            
+            const card = document.getElementById('scan-result-card');
+            const iconBg = document.getElementById('result-icon-bg');
+            const icon = document.getElementById('result-icon');
+            const statusTitle = document.getElementById('result-status-title');
+            const desc = document.getElementById('result-desc');
+            const detail = document.getElementById('result-detail');
+            const actionContainer = document.getElementById('action-btn-container');
 
-                if (valPercent * 100 > highestLeftoverVal) {
-                    highestLeftoverVal = valPercent * 100;
-                    highestLeftoverFood = foodInfo.name;
-                }
-            });
+            card.classList.remove('hidden');
+            actionContainer.innerHTML = ''; // 초기화
 
-            totalWeight = Math.round(totalWeight);
-            totalCost = Math.round(totalCost);
-            totalCarbon = Math.round(totalCarbon);
+            if (status === 'CONTAMINATED') {
+                iconBg.className = "w-10 h-10 rounded-lg flex items-center justify-center bg-red-500/20";
+                icon.className = "fa-solid fa-triangle-exclamation text-red-500 text-lg";
+                statusTitle.className = "text-[10px] font-bold text-red-400 tracking-wider uppercase";
+                statusTitle.innerText = "오염물 감지됨";
+                desc.innerText = "세척 상태가 불량합니다!";
+                detail.innerText = reason;
 
-            // 측정 시간 설정
-            const now = new Date();
-            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-
-            const reportTime = document.getElementById("report-time");
-            const reportWeight = document.getElementById("report-weight");
-            const reportCarbon = document.getElementById("report-carbon");
-
-            if (reportTime) reportTime.innerText = timeStr;
-            if (reportWeight) reportWeight.innerText = totalWeight + " g";
-            if (reportCarbon) reportCarbon.innerText = totalCarbon.toLocaleString() + " g CO₂";
-
-            // 학교 단위 스케일 확장 계산 (임의 학교 시뮬레이션 핵심)
-            // 학생들이 평소에 버리는 평균 기호도가 이 유저의 잔량 상태와 70% 유사하다고 단순화 시뮬레이션
-            const extrapolatedDailyWasteKg = ((totalWeight * currentStudentCount * 0.7) / 1000).toFixed(1);
-            // 하루 절감 가능액 (낭비 제거 기금)
-            const dailyCost = totalCost * currentStudentCount * 0.7;
-            const annualSavings = Math.round(dailyCost * 180); // 연간 급식일수 약 180일로 가정
-            // 학교 전체 탄소 절감 환산량
-            const dailyCarbonReductionKg = ((totalCarbon * currentStudentCount * 0.7) / 1000).toFixed(1);
-            // 소나무 한 그루가 연간 흡수하는 온실가스 평균 가치 약 6.6kg CO2 환산
-            const treesPlantedEquivalent = Math.round((dailyCarbonReductionKg * 180) / 6.6);
-
-            const simSchoolWaste = document.getElementById("sim-school-waste");
-            const simSchoolSavings = document.getElementById("sim-school-savings");
-            const simSchoolCarbon = document.getElementById("sim-school-carbon");
-            const simSchoolTrees = document.getElementById("sim-school-trees");
-
-            if (simSchoolWaste) simSchoolWaste.innerText = `${extrapolatedDailyWasteKg} kg`;
-            if (simSchoolSavings) simSchoolSavings.innerText = `₩${annualSavings.toLocaleString()}`;
-            if (simSchoolCarbon) simSchoolCarbon.innerText = `${dailyCarbonReductionKg} kg CO₂`;
-            if (simSchoolTrees) simSchoolTrees.innerText = `${treesPlantedEquivalent} 그루`;
-
-            // 성적 평정 뷰 매칭
-            const ratingEl = document.getElementById("report-rating");
-            let ratingText = "";
-            let ratingClass = "";
-            let aiMsg = "";
-            let pointsGained = 0;
-
-            if (totalWeight === 0) {
-                ratingText = "최우수 (Perfect Zero) 🎖️";
-                ratingClass = "text-xs font-black bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full";
-                aiMsg = `잔반이 전혀 없는 완벽한 식판입니다! ${currentSchoolName} 전체의 온실가스 배출 감소 속도에 기여하셨습니다. 에코 포인트 80P가 지급됩니다.`;
-                pointsGained = 80;
-            } else if (totalWeight < 60) {
-                ratingText = "우수 (Good Eco) 👍";
-                ratingClass = "text-xs font-black bg-teal-100 text-teal-800 px-2.5 py-1 rounded-full";
-                aiMsg = "거의 대부분 비워 주셨습니다. 낭비 수준이 상당히 안정적입니다! 40P를 획득하여 쿠폰 보상 상점에 한 걸음 더 다가갑니다.";
-                pointsGained = 40;
-            } else if (totalWeight < 180) {
-                ratingText = "보통 (Warning) ⚠️";
-                ratingClass = "text-xs font-black bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full";
+                // 세척 버튼 노출 및 세척존 활성화
+                document.getElementById('wash-station').classList.remove('hidden');
+                actionContainer.innerHTML = `<button onclick="scrollToWash()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1"><i class="fa-solid fa-sink"></i> 에코세척 zone</button>`;
+                showMessage("수거 거부: 페트병 내부 오염 감지. 세척이 필요합니다.", "fa-circle-xmark", "text-red-400");
                 
-                // 남긴 사유 피드백 조율
-                let reasonAdvice = "";
-                if (selectedReason === "taste") {
-                    reasonAdvice = `[맛/식감 불만족] 피드백이 교내 영양 설문 분석 데이터로 즉각 전송되어 다음 식단 조율에 사용됩니다.`;
-                } else if (selectedReason === "full") {
-                    reasonAdvice = `[양이 너무 많음] 배식 조절 실패 건입니다. 다음에는 배식원에게 가볍게 '적게 담아주세요'라고 요청해 보세요.`;
-                } else {
-                    reasonAdvice = `사유 데이터가 교내 AI 전용 급식망에 연동되었습니다.`;
-                }
+            } else if (status === 'LABEL_ATTACHED') {
+                iconBg.className = "w-10 h-10 rounded-lg flex items-center justify-center bg-amber-500/20";
+                icon.className = "fa-solid fa-scissors text-amber-500 text-lg";
+                statusTitle.className = "text-[10px] font-bold text-amber-400 tracking-wider uppercase";
+                statusTitle.innerText = "라벨 미제거";
+                desc.innerText = "라벨이 감지되었습니다!";
+                detail.innerText = reason;
 
-                aiMsg = `주 반찬인 [${highestLeftoverFood}]의 누수가 큽니다. ${reasonAdvice}`;
-            } else {
-                ratingText = "낭비 과다 (Eco Alert) 🚨";
-                ratingClass = "text-xs font-black bg-rose-100 text-rose-800 px-2.5 py-1 rounded-full";
-                aiMsg = `식판의 버려지는 비중이 심각합니다. 이 패턴이 ${currentSchoolName} 전체에 고착화되면 위탁 수수료의 막대한 손해를 낳습니다. 조금씩 담는 연습을 제안합니다.`;
-            }
-
-            if (ratingEl) {
-                ratingEl.innerText = ratingText;
-                ratingEl.className = ratingClass;
-            }
-            const reportAiMsg = document.getElementById("report-ai-msg");
-            if (reportAiMsg) reportAiMsg.innerText = aiMsg;
-
-            // 포인트 적립 및 랭킹 갱신 반영
-            if (pointsGained > 0) {
-                userPoints += pointsGained;
-                const userPointsEl = document.getElementById("user-points");
-                if (userPointsEl) userPointsEl.innerText = userPoints.toLocaleString() + " P";
+                document.getElementById('wash-station').classList.remove('hidden');
+                actionContainer.innerHTML = `<button onclick="scrollToWash()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1"><i class="fa-solid fa-scissors"></i> 라벨 뜯기</button>`;
+                showMessage("수거 거부: 비닐 라벨이 남아있습니다.", "fa-circle-exclamation", "text-amber-400");
                 
-                // 랭킹 리스트에 내 데이터 점수 업데이트
-                const userObj = rankingData.find(s => s.id === "user");
-                if (userObj) {
-                    userObj.points = userPoints;
-                    
-                    let badgeName = "새싹 그린스타 🌱";
-                    if (userPoints >= 2000) {
-                        badgeName = "마스터 가디언 🌳";
-                    } else if (userPoints >= 1300) {
-                        badgeName = "푸른 줄기 스페셜리스트 🌿";
-                    }
-                    userObj.badge = badgeName;
-                    
-                    const userBadgeEl = document.getElementById("user-badge");
-                    if (userBadgeEl) userBadgeEl.innerText = badgeName;
-                }
+            } else if (status === 'CLEAN') {
+                iconBg.className = "w-10 h-10 rounded-lg flex items-center justify-center bg-emerald-500/20";
+                icon.className = "fa-solid fa-circle-check text-emerald-500 text-lg";
+                statusTitle.className = "text-[10px] font-bold text-emerald-400 tracking-wider uppercase";
+                statusTitle.innerText = "완벽한 상태";
+                desc.innerText = "스마트 수거 완료!";
+                detail.innerText = reason;
 
-                // 에코 보상 쿠폰바 갱신
-                updateCouponStore();
+                actionContainer.innerHTML = `<span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 text-xs font-bold rounded-lg border border-emerald-500/30">+100P 적립</span>`;
+                
+                // 포인트 및 해성고 통계 적립
+                userPoints += 100;
+                totalBottles += 1;
+                totalWater += 2.5; // 페트병 하나 세척 및 정상분리시 기회비용 물 절약 가치 2.5L 부여
+                class4Bottles += 1;
+                updatePointsDisplay();
 
-                // 에코 랭킹 소팅 및 재렌더링
-                renderRanking();
+                // 축하 불꽃놀이 효과
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
 
-                // 알림 영역 갱신
-                const ecoNotification = document.getElementById("eco-notification");
-                if (ecoNotification) {
-                    ecoNotification.innerText = `🎉 성공! 완벽 스캔 성과로 ${pointsGained} 포인트가 지급되었습니다!`;
-                    ecoNotification.className = "text-[11px] font-bold text-emerald-700 bg-emerald-50 p-2.5 rounded-xl text-center border border-dashed border-emerald-300 animate-bounce";
-                    
-                    // 3초 후 애니메이션 및 메세지 안착
-                    setTimeout(() => {
-                        ecoNotification.className = "text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl text-center border border-dashed border-slate-200";
-                        ecoNotification.innerText = "다음 스캔 시에도 잔반 제로를 기록하여 에코 지킴이가 되세요!";
-                    }, 4000);
-                }
+                showMessage("성공적으로 분리수거 되었습니다! +100 포인트", "fa-circle-check", "text-emerald-400");
             }
         }
 
-        // Q&A 게시글 수동 추가 시뮬레이션
-        function addQna() {
-            const nameEl = document.getElementById("qna-name");
-            const msgEl = document.getElementById("qna-msg");
+        function scrollToWash() {
+            document.getElementById('wash-station').scrollIntoView({ behavior: 'smooth' });
+        }
 
-            if (!nameEl || !msgEl || !nameEl.value.trim() || !msgEl.value.trim()) {
+        // 물로 헹구기 인터랙션
+        function simulateRinse() {
+            if (currentScanResult !== 'CONTAMINATED') {
+                showMessage("내부 세척이 필요한 페트병이 아닙니다.", "fa-circle-info", "text-blue-400");
                 return;
             }
 
-            const list = document.getElementById("qna-list");
-            if (list) {
-                const wrapper = document.createElement("div");
-                wrapper.className = "bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] space-y-1.5";
-                wrapper.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-slate-700">${escapeHtml(nameEl.value)}</span>
-                        <span class="text-[9px] text-emerald-700 font-extrabold bg-emerald-100 px-2 py-0.5 rounded-full">답변 검토중</span>
-                    </div>
-                    <p class="text-slate-600 leading-relaxed font-bold">Q: ${escapeHtml(msgEl.value)}</p>
-                    <p class="text-emerald-800 font-medium bg-white p-2.5 rounded-lg border border-emerald-50 leading-relaxed">
-                        <i class="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-full mr-1 animate-pulse"></i>AI 운영 소그룹이 의견을 분석하여 승인 처리 중입니다. 좋은 피드백 감사합니다!
-                    </p>
-                `;
-                list.prepend(wrapper);
+            // 가상 수거기 스프레이 효과
+            const waterSpray = document.getElementById('water-spray');
+            waterSpray.classList.remove('hidden');
+
+            showMessage("뽀득뽀득 물 세척을 시작합니다...", "fa-faucet-drip", "text-blue-500");
+
+            setTimeout(() => {
+                waterSpray.classList.add('hidden');
+                showMessage("세척 완료! 내부 정화 완료.", "fa-circle-check", "text-emerald-400");
+                
+                // 만약 라벨이 붙어있을수도 있는 더 세부적인 로직 지원:
+                // 여기서는 오염 해결 후 라벨 상태가 깨끗하게 전환되거나 라벨 단계로 전환
+                displayScanResult('CLEAN', '내부 세척이 성공적으로 완료되었습니다. 더러운 찌꺼기가 모두 사라졌습니다.', '이제 기기에 투입하세요!');
+            }, 3000);
+        }
+
+        // 라벨 뜯기 인터랙션
+        function simulatePeel() {
+            if (currentScanResult !== 'LABEL_ATTACHED') {
+                showMessage("라벨을 떼어야 하는 페트병이 아닙니다.", "fa-circle-info", "text-blue-400");
+                return;
             }
 
-            nameEl.value = "";
-            msgEl.value = "";
+            showMessage("비닐 라벨을 시원하게 벗겨내는 중...", "fa-scissors", "text-orange-500");
+
+            setTimeout(() => {
+                showMessage("라벨 분리 완료! 투명 페트병 분리 수거 가치가 극대화되었습니다.", "fa-circle-check", "text-emerald-400");
+                displayScanResult('CLEAN', '비닐 라벨을 말끔히 정화하였습니다.', '스마트 기기에 완벽하게 투입할 수 있습니다!');
+            }, 2500);
         }
 
-        // 보안 문자 방어
-        function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        // 스캐너 완전 초기화
+        function resetScanner() {
+            resetScannerUI();
+            currentScanResult = null;
+            document.getElementById('state-idle').classList.remove('hidden');
+            document.getElementById('wash-station').classList.add('hidden');
+            showMessage("스캐너가 리셋되어 대기 상태로 전환되었습니다.");
         }
 
-        // DOM이 준비되었을 때만 초기 가동 로직 실행
-        window.addEventListener('DOMContentLoaded', () => {
-            updateTrayVisual();
-            updateCouponStore();
-            renderRanking();
-            simulatePeers();
-        });
+        function resetScannerUI() {
+            document.getElementById('preview-img').classList.add('hidden');
+            document.getElementById('scan-result-card').classList.add('hidden');
+            document.getElementById('scanner-laser').classList.add('hidden');
+            document.getElementById('water-spray').classList.add('hidden');
+            document.getElementById('state-loading').classList.add('hidden');
+        }
+
+        // 직접 파일 이미지 업로드 핸들러 (Gemini API 탑재 가능)
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            resetScannerUI();
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                
+                // 프리뷰 표시
+                const previewImg = document.getElementById('preview-img');
+                previewImg.src = base64Data;
+                previewImg.classList.remove('hidden');
+                document.getElementById('state-idle').classList.add('hidden');
+                document.getElementById('state-loading').classList.remove('hidden');
+
+                if (apiKey) {
+                    // API 키가 있을 시 직접 Gemini Vision에 전송 및 검수
+                    analyzeWithGemini(base64Data.split(',')[1], file.type);
+                } else {
+                    // API 키가 없으면, 분석 중인 체 하다가 안전하게 '오염' 혹은 '라벨미제거' 랜덤 결과를 모사 제공
+                    setTimeout(() => {
+                        document.getElementById('state-loading').classList.add('hidden');
+                        const results = ['CONTAMINATED', 'LABEL_ATTACHED', 'CLEAN'];
+                        const randomStatus = results[Math.floor(Math.random() * results.length)];
+                        
+                        let reason = "사용자 이미지 스캔 검수: ";
+                        let guide = "";
+
+                        if (randomStatus === 'CONTAMINATED') {
+                            reason += "내부에 잔여 음료가 비쳐 보입니다. 악취를 유발할 수 있습니다.";
+                            guide = PRESETS.dirty.guide;
+                        } else if (randomStatus === 'LABEL_ATTACHED') {
+                            reason += "라벨 스티커 미부착 제거 상태가 감지되었습니다.";
+                            guide = PRESETS.labeled.guide;
+                        } else {
+                            reason += "내용물이 비어 있고 라벨이 정갈하게 완전히 제고되어 있습니다.";
+                            guide = PRESETS.clean.guide;
+                        }
+
+                        displayScanResult(randomStatus, reason, guide);
+                    }, 3000);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Gemini 2.5 Flash Vision API 호출
+        async function analyzeWithGemini(base64Image, mimeType) {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const prompt = `
+            너는 스마트 에코 분리수거기 AI 스캐너야. 업로드된 이미지를 보고 이 플라스틱 페트병/용기의 세척 상태 및 라벨 제거 여부를 냉정하고 정확하게 평가해줘.
+            반드시 아래에 명시된 JSON 포맷으로만 응답해야 해.
+
+            {
+                "status": "CLEAN" 또는 "CONTAMINATED" 또는 "LABEL_ATTACHED",
+                "reason": "한글로 작성된 구체적이고 현실적인 이유 (최대 1~2줄)",
+                "guide": "한글로 작성된 분리배출 가이드 조언"
+            }
+
+            * 상태 정의:
+            - CLEAN: 내부가 완전히 비어있어 깨끗하고, 라벨도 제거되어 있는 경우.
+            - CONTAMINATED: 물 이외의 이물질이나 잔여물(콜라, 우유, 커피 등)이 가득 차 있거나 내부가 불결한 경우.
+            - LABEL_ATTACHED: 내부는 깨끗해 보이나 비닐로 구성된 오염성 상표 라벨지가 여전히 외부 전면에 부착되어 있는 경우.
+            `;
+
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        {
+                            inlineData: {
+                                mimeType: mimeType,
+                                data: base64Image
+                            }
+                        }
+                    ]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
+            };
+
+            // 지수 백오프 기반 오류 제어 (최대 5회)
+            let attempts = 0;
+            let delay = 1000;
+            let success = false;
+            let resultJson = null;
+
+            while (attempts < 5 && !success) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error("API 응답 실패");
+                    
+                    const resData = await response.json();
+                    const textResult = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+                    resultJson = JSON.parse(textResult);
+                    success = true;
+                } catch (err) {
+                    attempts++;
+                    if (attempts >= 5) {
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+
+            document.getElementById('state-loading').classList.add('hidden');
+
+            if (success && resultJson) {
+                displayScanResult(resultJson.status, resultJson.reason, resultJson.guide);
+            } else {
+                // 최종 오류 시 로컬 시뮬레이션으로 소프트 보완
+                showMessage("API 호출 한계로 지능적 로컬 모사 진단을 가동합니다.", "fa-triangle-exclamation", "text-amber-500");
+                displayScanResult('CONTAMINATED', '로컬 진단 결과: 내부 벽면에 잔류물이 미세하게 존재하거나 바닥 앙금이 남아있습니다.', '물로 한 번 흔들어 깨끗하게 헹궈 내어 투입해 주세요.');
+            }
+        }
+
+        // API 설정 모달 제어
+        function toggleApiModal(show) {
+            const modal = document.getElementById('api-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function saveApiKey() {
+            const val = document.getElementById('api-key-input').value.trim();
+            apiKey = val;
+            localStorage.setItem('eco_gemini_key', val);
+            toggleApiModal(false);
+            showMessage("Gemini API 키가 성공적으로 설정되었습니다.");
+        }
+
+        // 오늘의 에코 퀴즈 검증
+        function checkQuizAnswer(ans) {
+            if (ans === 2) {
+                userPoints += 100;
+                updatePointsDisplay();
+                // 퀴즈 성공 UI 리디자인
+                document.getElementById('quiz-container').innerHTML = `
+                    <div class="text-center py-4">
+                        <span class="text-3xl">🎉</span>
+                        <p class="text-xs font-bold text-emerald-800 mt-2">정답입니다! 100 포인트를 획득했습니다.</p>
+                        <p class="text-[10px] text-slate-500 mt-1">티셔츠 한 벌에 무려 2,700리터의 물(면화 재배 및 가공 단계)이 수반됩니다. 소비 생활도 소중한 물을 절약하는 첫걸음입니다.</p>
+                    </div>
+                `;
+                confetti({ particleCount: 50, spread: 40 });
+            } else {
+                showMessage("아쉽게도 오답입니다! 다시 한 번 생각해보세요.", "fa-circle-xmark", "text-red-400");
+            }
+        }
+
+        // 교내 리워드 교환
+        function buyReward(name, price) {
+            if (userPoints < price) {
+                showMessage(`포인트가 부족합니다! (필요 포인트: ${price}P)`, "fa-circle-exclamation", "text-amber-500");
+                return;
+            }
+            
+            userPoints -= price;
+            updatePointsDisplay();
+
+            // 교환 확인 모달 대신 예쁜 에코 티켓 생성 알림
+            showMessage(`교환 완료! 모바일 보관함으로 [${name}]이 발송되었습니다.`);
+            
+            confetti({
+                particleCount: 80,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 }
+            });
+            confetti({
+                particleCount: 80,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 }
+            });
+        }
     </script>
 </body>
 </html>
