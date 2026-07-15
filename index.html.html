@@ -3,579 +3,913 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>날씨의 알림 - 전주해성고 안전 기상 레이더</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons (기상 아이콘용) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>꿈꾸는 교실: 타이쿤 & 모평 마스터</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
+        :root {
+            --bg-gradient: linear-gradient(135deg, #F0F4F8 0%, #D9E2EC 100%);
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --text-main: #102A43;
+            --text-sub: #627D98;
+            --border-color: #BCCCDC;
+            --primary: #2ECC71;
+            --primary-dark: #27AE60;
+            --accent: #F1C40F;
+            --shadow: 0 20px 40px rgba(16, 42, 67, 0.08);
+            --radius: 24px;
+            --garden-sky: linear-gradient(to bottom, #B3E5FC, #FFF9C4);
+        }
+
+        body.dark-mode {
+            --bg-gradient: linear-gradient(135deg, #0F172A 0%, #020617 100%);
+            --card-bg: rgba(30, 41, 59, 0.95);
+            --text-main: #F1F5F9;
+            --text-sub: #94A3B8;
+            --border-color: #334155;
+            --shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            --garden-sky: linear-gradient(to bottom, #1E1B4B, #0F172A);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.25s, color 0.25s, border-color 0.25s;
+        }
+
         body {
-            font-family: 'Pretendard', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
         }
-        /* 뷰 전환 시 부드러운 페이드 인 효과 */
-        .fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
+
+        #effect-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .toast {
+            position: fixed;
+            bottom: 115px;
+            background: rgba(15, 23, 42, 0.95);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 30px;
+            display: none;
+            z-index: 9999;
+            font-weight: 700;
+            font-size: 0.88rem;
+            animation: fadeInOut 2.8s forwards;
+            text-align: center;
+            width: 85%;
+            max-width: 400px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        /* 펄스 애니메이션 (위험 느낌표용) */
-        @keyframes custom-ping {
-            0% { transform: scale(1); opacity: 1; }
-            70%, 100% { transform: scale(1.4); opacity: 0; }
+        @keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, 10px); } 12% { opacity: 1; transform: translate(-50%, 0); } 88% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 95px;
         }
-        .animate-custom-ping {
-            animation: custom-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+
+        #view-welcome {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0EA5E9 0%, #22C55E 100%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            color: white;
+            text-align: center;
+        }
+        #view-welcome.hidden { opacity: 0; pointer-events: none; transform: scale(0.95); transition: all 0.35s ease; }
+        .welcome-logo { font-size: 5.5rem; margin-bottom: 15px; animation: bounce 2s infinite alternate; }
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-15px); } }
+
+        /* [추가] 명언 스타일 */
+        #quote-display { margin: 15px 0; font-style: italic; opacity: 0.9; font-size: 0.95rem; padding: 0 20px; font-weight: 500; min-height: 45px; }
+
+        .input-group { margin-bottom: 20px; width: 100%; }
+        #txt-username { padding: 15px; border-radius: 12px; border: none; width: 100%; font-size: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .start-btn { padding: 15px 30px; border-radius: 12px; border: none; background: white; color: #0EA5E9; font-weight: 900; font-size: 1.1rem; cursor: pointer; }
+
+        header {
+            background: linear-gradient(135deg, #0EA5E9, #22C55E);
+            color: white; padding: 22px 20px; border-bottom-left-radius: 32px; border-bottom-right-radius: 32px;
+            box-shadow: 0 12px 30px rgba(34, 197, 94, 0.2);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header-title { font-size: 1.25rem; font-weight: 900; }
+        .dark-toggle-btn {
+            background: rgba(255, 255, 255, 0.25); border: none; font-size: 1.2rem;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .user-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr); background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px); padding: 12px; border-radius: 16px; text-align: center;
+        }
+        .stat-box h5 { font-size: 0.7rem; opacity: 0.9; margin-bottom: 3px; }
+        .stat-box p { font-size: 1.05rem; font-weight: 800; }
+
+        main { padding: 20px; flex: 1; }
+        .view-panel { display: none; animation: slideUp 0.3s ease-out; }
+        .view-panel.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            background: var(--card-bg); border-radius: var(--radius); padding: 20px;
+            box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid var(--border-color);
+        }
+        h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+        .garden-plot {
+            height: 290px; background: var(--garden-sky);
+            border-radius: var(--radius); position: relative; overflow: hidden;
+            border: 4px solid #FFF; cursor: crosshair;
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.1);
+        }
+        body.dark-mode .garden-plot { border-color: #334155; }
+        
+        .decor-layer { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
+        
+        .placement-guide-overlay {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(14, 165, 233, 0.15); display: none;
+            justify-content: center; align-items: center; color: #0EA5E9;
+            font-weight: 800; font-size: 0.9rem; z-index: 90; pointer-events: none;
+            border: 3px dashed #0EA5E9; border-radius: 18px;
+        }
+        .placement-guide-overlay.active { display: flex; }
+
+        .game-object {
+            position: absolute; transform-origin: bottom center;
+            cursor: pointer; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.15));
+            user-select: none; display: inline-block;
+        }
+        .object-emoji {
+            font-size: 2.5rem; display: block;
+            transition: transform 0.2s;
+        }
+        .game-object.selected {
+            outline: 3px dashed #FF4081;
+            outline-offset: 4px;
+            border-radius: 8px;
+            animation: pulseGlow 1s infinite alternate;
+            z-index: 999 !important;
+        }
+        @keyframes pulseGlow { from { box-shadow: 0 0 5px #FF4081; } to { box-shadow: 0 0 20px #FF4081; } }
+
+        .main-tree {
+            position: absolute; left: 50%; bottom: 15px; transform: translateX(-50%);
+            font-size: 6.8rem; cursor: pointer; filter: drop-shadow(0 8px 12px rgba(0,0,0,0.15));
+        }
+        .ground-line { position: absolute; bottom: 0; width: 100%; height: 28px; background: #4CAF50; border-top: 4px solid #388E3C; z-index: 5; }
+        body.dark-mode .ground-line { background: #1B5E20; border-top-color: #0D3E10; }
+
+        .game-controller-panel {
+            display: none; background: #0F172A; color: white;
+            padding: 10px 15px; border-radius: 16px; margin-top: 12px;
+            align-items: center; justify-content: space-between;
+            animation: popIn 0.25s forwards;
+        }
+        .game-controller-panel.active { display: flex; }
+        .control-btn-group { display: flex; gap: 8px; }
+        .ctrl-btn {
+            background: #334155; border: none; color: white; padding: 6px 12px;
+            border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;
+        }
+        .ctrl-btn:hover { background: #475569; }
+        .ctrl-btn.danger { background: #EF4444; }
+        .ctrl-btn.danger:hover { background: #DC2626; }
+
+        .exp-container { margin-top: 15px; background: #E2E8F0; border-radius: 50px; height: 18px; position: relative; overflow: hidden; }
+        body.dark-mode .exp-container { background: #334155; }
+        .exp-bar { height: 100%; background: linear-gradient(90deg, #4ADE80, #0EA5E9); width: 0%; transition: width 0.3s; }
+        .exp-text { position: absolute; width: 100%; text-align: center; font-size: 0.68rem; font-weight: 800; color: #1E293B; top: 1px; z-index: 5; }
+        body.dark-mode .exp-text { color: #FFF; }
+
+        .inventory-dock {
+            margin-top: 12px; display: flex; gap: 10px; padding: 10px;
+            background: #F8FAFC; border-radius: 16px; border: 1px dashed var(--border-color);
+            overflow-x: auto; min-height: 65px;
+        }
+        body.dark-mode .inventory-dock { background: #1E293B; }
+        .dock-slot {
+            background: white; border: 1px solid var(--border-color); padding: 6px 14px;
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center;
+            cursor: pointer; min-width: 65px; position: relative;
+        }
+        body.dark-mode .dock-slot { background: #334155; }
+        .dock-slot.active { border-color: #0EA5E9; background: #F0F9FF; }
+        body.dark-mode .dock-slot.active { background: #0C4A6E; }
+        .slot-count { position: absolute; top: -5px; right: -5px; background: #0EA5E9; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: 800; }
+
+        .tab-bar { display: flex; background: #E2E8F0; padding: 4px; border-radius: 14px; margin-bottom: 12px; overflow-x: auto; }
+        body.dark-mode .tab-bar { background: #1E293B; }
+        .tab-btn { flex: 1; border: none; background: transparent; padding: 10px 8px; font-weight: 800; color: var(--text-sub); cursor: pointer; border-radius: 10px; font-size: 0.82rem; white-space: nowrap; }
+        .tab-btn.active { background: white; color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        body.dark-mode .tab-btn.active { background: #334155; }
+        .tab-btn.special-mock { color: #E11D48; }
+        .tab-btn.special-mock.active { background: #FFE4E6; color: #E11D48; }
+        body.dark-mode .tab-btn.special-mock.active { background: #881337; color: #FDA4AF; }
+
+        .sub-filter-bar { display: flex; gap: 6px; margin-bottom: 15px; background: #F1F5F9; padding: 4px; border-radius: 12px; }
+        body.dark-mode .sub-filter-bar { background: #1E293B; }
+        .diff-btn { flex: 1; border: none; background: transparent; padding: 8px 0; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; color: var(--text-sub); }
+        .diff-btn.active.diff-easy { background: #DCFCE7; color: #16A34A; }
+        .diff-btn.active.diff-medium { background: #FEF9E7; color: #D97706; }
+        .diff-btn.active.diff-hard { background: #FFE4E6; color: #E11D48; }
+        body.dark-mode .diff-btn.active.diff-hard { background: #881337; color: #FDA4AF; }
+
+        .difficulty-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 900; margin-bottom: 8px; }
+        .badge-easy { background: #DCFCE7; color: #16A34A; }
+        .badge-medium { background: #FEF9E7; color: #D97706; }
+        .badge-hard { background: #FFE4E6; color: #E11D48; }
+
+        .question-wrapper { background: #F8FAFC; border-radius: 16px; padding: 20px; border: 1px solid var(--border-color); }
+        body.dark-mode .question-wrapper { background: #1E293B; }
+        .question-text { font-size: 0.95rem; font-weight: 700; line-height: 1.6; margin-bottom: 18px; white-space: pre-line; }
+        
+        .option-list { display: flex; flex-direction: column; gap: 10px; }
+        .opt-card { background: white; border: 1px solid var(--border-color); padding: 14px; border-radius: 12px; text-align: left; font-size: 0.9rem; cursor: pointer; color: var(--text-main); line-height: 1.4; }
+        body.dark-mode .opt-card { background: #334155; }
+        .opt-card:hover { background: #F1F5F9; }
+        body.dark-mode .opt-card:hover { background: #475569; }
+        
+        .opt-card.correct { background: #DCFCE7; border-color: #22C55E; color: #15803D; font-weight: 700; }
+        body.dark-mode .opt-card.correct { background: #166534; color: #BBF7D0; }
+        .opt-card.wrong { background: #FEE2E2; border-color: #EF4444; color: #991B1B; }
+        body.dark-mode .opt-card.wrong { background: #7F1D1D; color: #FECACA; }
+        
+        .action-container { margin-top: 15px; display: none; }
+        .explain-box { background: #E0F2FE; border-left: 5px solid #0EA5E9; padding: 15px; border-radius: 4px 14px 14px 4px; font-size: 0.85rem; line-height: 1.5; margin-bottom: 15px; color: #0369A1; }
+        body.dark-mode .explain-box { background: #0C4A6E; color: #E0F2FE; border-left-color: #38BDF8; }
+
+        .timer-display-wrapper { background: linear-gradient(135deg, #1E293B, #0F172A); border-radius: 20px; padding: 30px 20px; text-align: center; color: #FFF; margin-bottom: 20px; }
+        .timer-display { font-size: 3.2rem; font-weight: 900; font-family: monospace; color: #22C55E; text-shadow: 0 0 15px rgba(34,197,94,0.3); }
+        .timer-controls { display: flex; gap: 12px; }
+        .timer-btn { flex: 1; border: none; padding: 14px; border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .shop-card { background: #F8FAFC; border: 1px solid var(--border-color); border-radius: 18px; padding: 15px; text-align: center; }
+        body.dark-mode .shop-card { background: #1E293B; }
+        .shop-icon { font-size: 2.5rem; margin-bottom: 5px; }
+        .shop-card button { background: #475569; color: white; border: none; padding: 10px; border-radius: 10px; margin-top: 10px; font-weight: 700; cursor: pointer; width: 100%; }
+        body.dark-mode .shop-card button { background: #64748B; }
+
+        nav {
+            position: fixed; bottom: 0; width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.93);
+            backdrop-filter: blur(20px); display: flex; justify-content: space-around; padding: 12px 0;
+            box-shadow: 0 -4px 25px rgba(0,0,0,0.05); border-top: 1px solid var(--border-color);
+            border-top-left-radius: 24px; border-top-right-radius: 24px; z-index: 1000;
+        }
+        body.dark-mode nav { background: rgba(15, 23, 42, 0.93); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; color: var(--text-sub); font-weight: 800; font-size: 0.72rem; flex: 1; }
+        .nav-item span.icon { font-size: 1.4rem; }
+        .nav-item.active { color: #0EA5E9; }
+
+        button.cta-btn {
+            background: linear-gradient(135deg, #0EA5E9, #0284C7); color: white; border: none;
+            padding: 15px; border-radius: 16px; font-size: 1.05rem; font-weight: 700; cursor: pointer; width: 100%;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between">
+<body>
 
-    <!-- 상단 헤더 -->
-    <header class="border-b border-white/10 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 px-4 py-3">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <div class="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-500/30">
-                    <i data-lucide="droplet" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight">날씨의 알림</h1>
-                    <p class="text-[10px] text-blue-400 font-medium">전북 전주해성고등학교 안전 등하굣길</p>
-                </div>
+    <canvas id="effect-canvas"></canvas>
+    <div id="toast" class="toast"></div>
+
+    <div class="app-container">
+
+        <div id="view-welcome">
+            <div class="welcome-logo">🎓</div>
+            <h1 style="font-size:2.3rem; font-weight:900;">꿈꾸는 교실</h1>
+            <!-- [추가] 명언 출력 영역 -->
+            <div id="quote-display"></div>
+            <p style="margin-bottom:25px; opacity:0.9; font-weight:600;">타이군 게임형 배치 시스템 & 모의고사 도입</p>
+            <div class="input-group">
+                <input type="text" id="txt-username" placeholder="학생 이름을 입력하세요" maxlength="8">
             </div>
-            <div>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                    전북 전주시 실시간 날씨 연동
-                </span>
-            </div>
-        </div>
-    </header>
-
-    <!-- 메인 컨텐츠 영역 -->
-    <main class="max-w-5xl w-full mx-auto p-4 flex-grow flex flex-col justify-center">
-        
-        <!-- [첫 화면] 메인 대시보드 뷰 -->
-        <div id="view-dashboard" class="fade-in space-y-6">
-            
-            <!-- 환영 안내 및 기상 제어기 -->
-            <div class="bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent"></div>
-                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-xl md:text-2xl font-bold tracking-tight">안녕하세요, 전주해성고등학교 학생 여러분! 👋</h2>
-                        <p class="text-xs text-slate-400 mt-1">7월 한여름 장마철 전주 날씨를 바탕으로 등하굣길 하수구 침수 위험을 예측합니다.</p>
-                    </div>
-                    <!-- 신속 기상 프리셋 제어 -->
-                    <div class="flex flex-wrap gap-2">
-                        <button onclick="setWeatherPreset('jeonjuCurrent')" class="px-3 py-1.5 bg-blue-500/20 border border-blue-500/40 hover:bg-blue-500/30 text-blue-300 text-xs font-semibold rounded-lg transition-all flex items-center gap-1">
-                            <i data-lucide="cloud-rain" class="w-3.5 h-3.5"></i> 전주 실시간 (7월 장마)
-                        </button>
-                        <button onclick="setWeatherPreset('sunny')" class="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 text-amber-300 text-xs font-semibold rounded-lg transition-all flex items-center gap-1">
-                            <i data-lucide="sun" class="w-3.5 h-3.5"></i> 맑음
-                        </button>
-                        <button onclick="setWeatherPreset('storm')" class="px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold rounded-lg transition-all flex items-center gap-1">
-                            <i data-lucide="cloud-lightning" class="w-3.5 h-3.5"></i> 집중호우/태풍
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 수치 간편 미세 조절 슬라이더 -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/5">
-                    <div>
-                        <div class="flex justify-between text-xs mb-1 text-slate-400">
-                            <span class="flex items-center gap-1"><i data-lucide="thermometer" class="w-3.5 h-3.5 text-amber-500"></i>온도 설정</span>
-                            <span id="temp-val" class="text-white font-bold">28°C</span>
-                        </div>
-                        <input type="range" id="input-temp" min="-10" max="40" value="28" oninput="updateWeather()" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-xs mb-1 text-slate-400">
-                            <span class="flex items-center gap-1"><i data-lucide="wind" class="w-3.5 h-3.5 text-sky-400"></i>바람 세기 설정</span>
-                            <span id="wind-val" class="text-white font-bold">3 m/s</span>
-                        </div>
-                        <input type="range" id="input-wind" min="0" max="30" value="3" oninput="updateWeather()" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-xs mb-1 text-slate-400">
-                            <span class="flex items-center gap-1"><i data-lucide="droplets" class="w-3.5 h-3.5 text-blue-400"></i>습도 설정</span>
-                            <span id="humidity-val" class="text-white font-bold">85%</span>
-                        </div>
-                        <input type="range" id="input-humidity" min="10" max="100" value="85" oninput="updateWeather()" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
-                    </div>
-                </div>
-            </div>
-
-            <!-- 핵심 기능 버튼 및 정보 레이아웃 그리드 (온도, 바람, 습도, 배수구 위험) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                
-                <!-- 1. 온도 카드 -->
-                <div class="bg-slate-900 border border-white/10 rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden group">
-                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <i data-lucide="thermometer" class="w-24 h-24 text-amber-500"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-400 font-medium">전주 실시간 기온</p>
-                        <h3 class="text-3xl font-extrabold mt-1 text-white" id="disp-temp">28°C</h3>
-                        <p class="text-[11px] text-amber-400 font-medium mt-1 inline-flex items-center gap-1">
-                            <i data-lucide="info" class="w-3 h-3"></i> 습하고 후덥지근함 주의
-                        </p>
-                    </div>
-                    <div class="bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 text-amber-400">
-                        <i data-lucide="thermometer" class="w-6 h-6"></i>
-                    </div>
-                </div>
-
-                <!-- 2. 바람 카드 -->
-                <div class="bg-slate-900 border border-white/10 rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden group">
-                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <i data-lucide="wind" class="w-24 h-24 text-sky-400"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-400 font-medium">현재 풍량 상태</p>
-                        <h3 class="text-3xl font-extrabold mt-1 text-white" id="disp-wind">3 m/s</h3>
-                        <p class="text-[11px] id="wind-text" class="text-sky-300 font-medium mt-1 inline-flex items-center gap-1">
-                            <i data-lucide="info" class="w-3 h-3"></i> 가벼운 산들바람
-                        </p>
-                    </div>
-                    <div class="bg-sky-500/10 p-3 rounded-xl border border-sky-500/20 text-sky-400">
-                        <i data-lucide="wind" class="w-6 h-6"></i>
-                    </div>
-                </div>
-
-                <!-- 3. 습도 카드 -->
-                <div class="bg-slate-900 border border-white/10 rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden group">
-                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <i data-lucide="droplets" class="w-24 h-24 text-blue-400"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-slate-400 font-medium">현재 대기 습도</p>
-                        <h3 class="text-3xl font-extrabold mt-1 text-white" id="disp-humidity">85%</h3>
-                        <p class="text-[11px] text-blue-400 font-medium mt-1 inline-flex items-center gap-1">
-                            <i data-lucide="info" class="w-3 h-3"></i> 장마 영향으로 다소 다습
-                        </p>
-                    </div>
-                    <div class="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-blue-400">
-                        <i data-lucide="droplets" class="w-6 h-6"></i>
-                    </div>
-                </div>
-
-                <!-- 4. 배수구 위험 탐색 버튼 (핵심 클릭 트리거) -->
-                <button onclick="navigateTo('map')" class="relative group bg-gradient-to-br from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white rounded-2xl p-5 flex flex-col justify-between shadow-xl shadow-red-950/40 text-left transition-all active:scale-98 border border-red-500/30">
-                    <span class="absolute top-3 right-3 w-3 h-3 rounded-full bg-white animate-ping"></span>
-                    <div class="bg-white/10 p-2.5 rounded-lg border border-white/10 self-start">
-                        <i data-lucide="shield-alert" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <div class="mt-4">
-                        <p class="text-[10px] text-red-200 font-semibold tracking-wider uppercase">하수구 침수 대비</p>
-                        <h3 class="text-lg font-bold flex items-center gap-1.5 mt-0.5">
-                            배수구 위험 확인하기
-                            <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
-                        </h3>
-                    </div>
-                </button>
-
-            </div>
-
-            <!-- 하단 간편 외출 및 강수 상태 종합 카드 -->
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                
-                <!-- 강수량 수치 조절 및 외출 예측 영역 -->
-                <div class="md:col-span-4 bg-slate-900 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
-                    <div>
-                        <p class="text-xs text-slate-400 font-medium">시뮬레이션 강수량</p>
-                        <div class="flex items-baseline gap-1 mt-1">
-                            <h3 class="text-3xl font-extrabold text-blue-400" id="disp-rain">15 mm/h</h3>
-                        </div>
-                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">아래 슬라이더를 밀어 비를 내리게 한 뒤, 배수구 위험 버튼을 눌러 침수 여부를 실험해 보세요.</p>
-                    </div>
-                    <div class="mt-4">
-                        <input type="range" id="input-rain" min="0" max="100" value="15" oninput="updateWeather()" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500">
-                    </div>
-                </div>
-
-                <!-- 외출 가이드 텍스트 안내 영역 -->
-                <div id="outing-guide-card" class="md:col-span-8 bg-slate-900 border border-white/10 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors duration-300">
-                    <div class="flex items-start gap-4">
-                        <div id="outing-icon-container" class="p-3.5 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20">
-                            <i data-lucide="smile" class="w-8 h-8"></i>
-                        </div>
-                        <div>
-                            <div id="outing-badge" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mb-1">
-                                외출 추천
-                            </div>
-                            <h3 class="text-md font-bold text-white">오늘의 안전 외출 수칙</h3>
-                            <p id="outing-desc" class="text-xs text-slate-400 leading-relaxed mt-1">
-                                날씨가 아주 화창합니다! 쾌적하게 친구들과 체육 활동이나 산책을 하기에 안성맞춤인 날씨예요.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
+            <button class="start-btn" onclick="startApp()">게임 시작하기 ➔</button>
         </div>
 
-
-        <!-- [두 번째 화면] 배수구 위험 및 지리 경고 지도 뷰 -->
-        <div id="view-map" class="fade-in hidden space-y-4">
-            
-            <!-- 상단 네비게이션 및 돌아가기 -->
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-slate-900 border border-white/10 rounded-2xl p-4">
-                <button onclick="navigateTo('dashboard')" class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-semibold border border-white/5 transition-all text-slate-300 hover:text-white self-start">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    대시보드로 돌아가기
-                </button>
-                <div class="flex items-center gap-2">
-                    <div id="drain-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                        안전 (침수 위험 낮음)
-                    </div>
-                    <span class="text-xs text-slate-400" id="drain-desc">도로 및 등하굣길 배수관이 깨끗하게 가동 중입니다.</span>
+        <header>
+            <div class="header-top">
+                <div class="header-title">🕹️ <span id="lbl-username">학생</span>의 정원</div>
+                <div class="header-actions" style="display:flex; align-items:center; gap:10px;">
+                    <button class="dark-toggle-btn" onclick="toggleDarkMode()">🌓</button>
+                    <div style="background:rgba(255,255,255,0.25); padding:5px 12px; border-radius:50px; font-size:0.75rem; font-weight:800;">🔥 오늘 <span id="lbl-solved-today">0</span>개 클리어</div>
                 </div>
             </div>
+            <div id="lbl-streak" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 10px; color: #FFF; background: rgba(0,0,0,0.1); display: inline-block; padding: 2px 10px; border-radius: 10px;">📅 연속 출석: 0일</div>
+            
+            <div class="user-stats">
+                <div class="stat-box"><h5>정원 등급</h5><p>Lv.<span id="lbl-lv">1</span></p></div>
+                <div class="stat-box"><h5>보유 머니</h5><p><span id="lbl-gold">0</span> 💰</p></div>
+                <div class="stat-box"><h5>보관 품목</h5><p><span id="lbl-unplaced-count">0</span>개</p></div>
+            </div>
+        </header>
 
-            <!-- 인터랙티브 안전 맵 및 모의 시뮬레이터 본체 -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                
-                <!-- 지리 지도 컨테이너 (8/12) -->
-                <div class="lg:col-span-8 bg-slate-900 border border-white/10 rounded-3xl p-4 shadow-xl flex flex-col gap-3">
-                    <div class="flex justify-between items-center px-1">
-                        <div>
-                            <h3 class="text-sm font-bold text-slate-200">🏫 전주해성고등학교 주변 배수 모니터링 지도</h3>
-                            <p class="text-[10px] text-slate-400">지도의 주요 통학 구역 배수 시설을 눌러 낙엽 및 모래 막힘 상태를 모의 실험해 보세요.</p>
-                        </div>
-                        <div class="text-[9px] text-slate-400 flex gap-2">
-                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>뚫림</span>
-                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span>막힘</span>
-                        </div>
-                    </div>
-
-                    <!-- 실제 가상 지도 렌더링 판 -->
-                    <div class="relative bg-slate-950 rounded-2xl overflow-hidden aspect-[4/3] border border-slate-800 flex items-center justify-center">
-                        
-                        <!-- 등하굣길 가상 일러스트 디자인 SVG (삼천동/평화동 격자) -->
-                        <svg class="absolute inset-0 w-full h-full opacity-20 select-none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="0" y="0" width="100%" height="100%" fill="#0a0f1d"/>
-                            <!-- 삼천천 주변 도로 표현 -->
-                            <path d="M 0,180 L 800,180 M 0,380 L 800,380 M 260,0 L 260,600 M 520,0 L 520,600" stroke="#475569" stroke-width="28" fill="none"/>
-                            <path d="M 0,180 L 800,180 M 0,380 L 800,380 M 260,0 L 260,600 M 520,0 L 520,600" stroke="#f1f5f9" stroke-width="2" stroke-dasharray="10, 10" fill="none"/>
-                            <!-- 삼천천 강줄기 가상 시각화 -->
-                            <path d="M 650,0 Q 720,250 780,600" stroke="#1d4ed8" stroke-width="32" fill="none" opacity="0.4"/>
-                        </svg>
-
-                        <!-- 지명 랜드마크 안내 태그 -->
-                        <div class="absolute top-6 left-1/3 -translate-x-1/2 bg-blue-600/20 border border-blue-500/30 text-[9px] px-2.5 py-1 rounded-full text-blue-300 font-bold backdrop-blur-sm">
-                            🏫 전주해성고 정문 앞 삼거리
-                        </div>
-                        <div class="absolute bottom-6 left-6 bg-slate-800/80 border border-slate-700 text-[8px] px-2 py-0.5 rounded text-slate-400">
-                            🏡 평화동/삼천동 반지하 주택 지구 (저지대)
-                        </div>
-                        <div class="absolute top-1/3 right-12 bg-blue-900/40 border border-blue-700/50 text-[8px] px-2 py-0.5 rounded text-blue-300">
-                            🌊 삼천변 산책로 (집중 호우 시 범람 위험)
-                        </div>
-
-                        <!-- 배수구 A (정문 입구 삼거리) -->
-                        <div class="absolute top-[32%] left-[32%] flex flex-col items-center">
-                            <div id="drain-1" class="relative group cursor-pointer" onclick="toggleDrainStatic(1)">
-                                <span id="ping-1" class="absolute -inset-2 rounded-full bg-red-500 animate-custom-ping hidden"></span>
-                                <div id="icon-container-1" class="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center relative z-10 hover:scale-115 transition-transform shadow-lg">
-                                    <i data-lucide="grid" class="w-5 h-5 text-slate-400"></i>
-                                    <span id="warn-badge-1" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center font-black text-[10px] shadow-lg shadow-red-500/40 border border-white hidden">!</span>
-                                </div>
-                            </div>
-                            <span class="text-[8px] text-slate-400 font-bold mt-1 bg-slate-900/90 px-1.5 py-0.5 rounded border border-slate-800">
-                                정문 삼거리 배수구 <span id="state-1" class="text-emerald-400">(뚫림)</span>
-                            </span>
-                        </div>
-
-                        <!-- 배수구 B (평화동 주택가 사거리) -->
-                        <div class="absolute bottom-[32%] left-[18%] flex flex-col items-center">
-                            <div id="drain-2" class="relative group cursor-pointer" onclick="toggleDrainStatic(2)">
-                                <span id="ping-2" class="absolute -inset-2 rounded-full bg-red-500 animate-custom-ping hidden"></span>
-                                <div id="icon-container-2" class="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center relative z-10 hover:scale-115 transition-transform shadow-lg">
-                                    <i data-lucide="grid" class="w-5 h-5 text-slate-400"></i>
-                                    <span id="warn-badge-2" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center font-black text-[10px] shadow-lg shadow-red-500/40 border border-white hidden">!</span>
-                                </div>
-                            </div>
-                            <span class="text-[8px] text-slate-400 font-bold mt-1 bg-slate-900/90 px-1.5 py-0.5 rounded border border-slate-800">
-                                주택가 골목 배수구 <span id="state-2" class="text-emerald-400">(뚫림)</span>
-                            </span>
-                        </div>
-
-                        <!-- 배수구 C (삼천교 하방 배수지) -->
-                        <div class="absolute top-[52%] right-[28%] flex flex-col items-center">
-                            <div id="drain-3" class="relative group cursor-pointer" onclick="toggleDrainStatic(3)">
-                                <span id="ping-3" class="absolute -inset-2 rounded-full bg-red-500 animate-custom-ping hidden"></span>
-                                <div id="icon-container-3" class="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center relative z-10 hover:scale-115 transition-transform shadow-lg">
-                                    <i data-lucide="grid" class="w-5 h-5 text-slate-400"></i>
-                                    <span id="warn-badge-3" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center font-black text-[10px] shadow-lg shadow-red-500/40 border border-white hidden">!</span>
-                                </div>
-                            </div>
-                            <span class="text-[8px] text-slate-400 font-bold mt-1 bg-slate-900/90 px-1.5 py-0.5 rounded border border-slate-800">
-                                삼천교 우회로 배수구 <span id="state-3" class="text-emerald-400">(뚫림)</span>
-                            </span>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- 탐구 질문 및 가이던스 카드 (4/12) -->
-                <div class="lg:col-span-4 flex flex-col gap-4">
+        <main>
+            <div id="view-home" class="view-panel active">
+                <div class="card">
+                    <h2 style="justify-content: space-between;">
+                        <span>🏡 2.5D 타일 커스텀 필드</span>
+                        <span style="font-size:0.72rem; color:#0EA5E9;" id="placement-status-text">아이템 선택 후 바닥 터치</span>
+                    </h2>
                     
-                    <div class="bg-slate-900 border border-white/10 rounded-3xl p-5 flex flex-col justify-between h-full">
-                        <div>
-                            <div class="flex items-center gap-1 text-blue-400 text-xs font-semibold mb-2">
-                                <i data-lucide="microscope" class="w-4 h-4"></i> 해성고 기후 안전 교육 가이드
-                            </div>
-                            <h4 class="text-md font-bold mb-2">삼천천 저지대 하수 인프라의 이해</h4>
-                            <p class="text-xs text-slate-400 leading-relaxed space-y-2">
-                                전주해성고등학교 주변 삼천동과 평화동 일대는 지리적으로 삼천(강줄기)에 인접하여 집중 호우 발생 시 배수관 역류 가능성이 상대적으로 높습니다.<br><br>
-                                왼쪽 지도에서 하수구 아이콘을 <strong>[막힘]</strong>으로 바꾼 뒤, 강수량을 변경해 가며 전주시 배수 시설 안전도를 시뮬레이션해 보세요.
-                            </p>
-                        </div>
-
-                        <div class="border-t border-white/5 mt-4 pt-4">
-                            <p class="text-[10px] text-amber-400 font-semibold flex items-center gap-1">
-                                <i data-lucide="info" class="w-3.5 h-3.5"></i> 해성고 통학생 행동 지침
-                            </p>
-                            <ul class="text-[10px] text-slate-400 mt-2 space-y-1.5 list-disc pl-3">
-                                <li>폭우 시 삼천천 산책로 하방 통행 절대 금지</li>
-                                <li>정문 입구 물웅덩이 우회하여 감전 예방</li>
-                                <li>등하굣길 안전 확보를 위해 우산 깊게 쓰지 않기</li>
-                            </ul>
-                        </div>
+                    <div class="garden-plot" id="garden-plot-canvas" onclick="handleGardenPlotClick(event)">
+                        <div class="placement-guide-overlay" id="placement-overlay">📍 배치할 지점을 클릭(터치)하세요!</div>
+                        <div class="decor-layer" id="decor-layer"></div>
+                        <div class="main-tree" id="main-tree" onclick="tapTree(event)">🌱</div>
+                        <div class="ground-line"></div>
                     </div>
 
+                    <div class="game-controller-panel" id="game-controller">
+                        <span style="font-size:0.82rem; font-weight:800;" id="lbl-selected-name">선택된 오브젝트</span>
+                        <div class="control-btn-group">
+                            <button class="ctrl-btn" onclick="rotateSelectedObject()">🔄 회전</button>
+                            <button class="ctrl-btn" onclick="flipSelectedObject()">↔️ 반전</button>
+                            <button class="ctrl-btn danger" onclick="removeSelectedObject()">🗑️ 철거</button>
+                        </div>
+                    </div>
+                    
+                    <div class="exp-container">
+                        <div class="exp-text">EXP: <span id="lbl-exp-current">0</span> / <span id="lbl-exp-max">100</span></div>
+                        <div class="exp-bar" id="bar-exp-fill"></div>
+                    </div>
+
+                    <div style="font-size:0.8rem; font-weight:800; margin-top:15px; color:var(--text-sub);">📦 인벤토리 보관함</div>
+                    <div class="inventory-dock" id="inventory-dock"></div>
                 </div>
-
             </div>
 
-        </div>
+            <div id="view-quiz" class="view-panel">
+                <div class="card">
+                    <div class="tab-bar">
+                        <button class="tab-btn active" id="btn-tab-kor" onclick="setSubject('kor')">국어</button>
+                        <button class="tab-btn" id="btn-tab-math" onclick="setSubject('math')">수학</button>
+                        <button class="tab-btn" id="btn-tab-eng" onclick="setSubject('eng')">영어</button>
+                        <button class="tab-btn" id="btn-tab-sci" onclick="setSubject('sci')">과학</button>
+                        <button class="tab-btn special-mock" id="btn-tab-mock" onclick="setSubject('mock')">📝 모의고사</button>
+                    </div>
 
-    </main>
+                    <div class="sub-filter-bar">
+                        <button class="diff-btn active diff-easy" id="btn-diff-하" onclick="setDifficulty('하')">하(기초)</button>
+                        <button class="diff-btn diff-medium" id="btn-diff-중" onclick="setDifficulty('중')">중(평가원)</button>
+                        <button class="diff-btn diff-hard" id="btn-diff-상" onclick="setDifficulty('상')">상(킬러문항)</button>
+                    </div>
 
-    <!-- 하단 통계 및 SDG 정보 제공 푸터 -->
-    <footer class="border-t border-white/10 bg-slate-950 p-5 text-center text-xs text-slate-400 mt-6">
-        <div class="max-w-4xl mx-auto flex flex-col gap-3">
-            <div class="flex flex-wrap justify-center gap-3 text-[10px]">
-                <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 flex items-center gap-1">
-                    <strong class="text-blue-400">SDG 4</strong> 양질의 교육
-                </span>
-                <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 flex items-center gap-1">
-                    <strong class="text-pink-400">SDG 5</strong> 성평등 (취약 계층 보행안전망)
-                </span>
-                <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 flex items-center gap-1">
-                    <strong class="text-emerald-400">SDG 11</strong> 지속 가능한 전주시 만들기
-                </span>
+                    <div class="question-wrapper">
+                        <div id="q-badge-zone"></div>
+                        <div class="question-text" id="q-text">문제를 추출하는 중입니다...</div>
+                        <div class="option-list" id="q-options"></div>
+                        
+                        <div class="action-container" id="q-action-zone">
+                            <div class="explain-box" id="q-explain"></div>
+                            <button class="cta-btn" onclick="generateQuestion()">다음 챌린지 ➔</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p class="text-[11px] leading-relaxed">
-                © 2026 전주해성고등학교 날씨의 알림. 학생 기후 변화 공동 대응 캠페인.
-            </p>
-        </div>
-    </footer>
 
-    <!-- 비즈니스 로직 스크립트 -->
+            <div id="view-timer" class="view-panel">
+                <div class="card">
+                    <h2>⏱️ 집중 스터디 경험치 펌프</h2>
+                    <div class="timer-display-wrapper">
+                        <div class="timer-display" id="lbl-timer-clock">00:00:00</div>
+                        <div style="font-size:0.85rem; color:#94A3B8; margin-top:5px;" id="lbl-timer-status">대기실 휴식 중</div>
+                    </div>
+                    <div class="timer-controls">
+                        <button class="timer-btn btn-start" style="background:#22C55E; color:white;" id="btn-timer-start" onclick="startTimer()">공부 시작</button>
+                        <button class="timer-btn" style="background:#F1C40F; color:white; display:none;" id="btn-timer-pause" onclick="pauseTimer()">일시 정지</button>
+                        <button class="timer-btn" style="background:#EF4444; color:white;" onclick="resetTimer()">초기화</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-shop" class="view-panel">
+                <div class="card">
+                    <h2>🛒 가든 인테리어 상점</h2>
+                    <div class="shop-grid" id="shop-items-grid"></div>
+                </div>
+            </div>
+        </main>
+
+        <nav>
+            <div class="nav-item active" id="nav-home" onclick="changeView('view-home')"><span class="icon">🏡</span><span>정원플레이</span></div>
+            <div class="nav-item" id="nav-quiz" onclick="changeView('view-quiz')"><span class="icon">✏️</span><span>문제은행</span></div>
+            <div class="nav-item" id="nav-timer" onclick="changeView('view-timer')"><span class="icon">⏱️</span><span>자습타이머</span></div>
+            <div class="nav-item" id="nav-shop" onclick="changeView('view-shop')"><span class="icon">🛒</span><span>상점</span></div>
+        </nav>
+    </div>
+
     <script>
-        // 현재 활성화된 화면 관리 ('dashboard' 또는 'map')
-        let currentView = 'dashboard';
+        // 명언 데이터
+        const quotes = [
+            "오늘 할 수 있는 일을 내일로 미루지 마라.",
+            "성공은 결과가 아니라 과정이다. 오늘도 한 걸음 더 나아가자.",
+            "당신의 열정이 내일의 실력이 됩니다.",
+            "배움에는 끝이 없고, 성취에는 한계가 없습니다.",
+            "오늘의 작은 노력이 미래의 큰 결실이 됩니다."
+        ];
 
-        // 배수구 상태 관리 (false = 정상 작동/뚫림, true = 막힘)
-        const drainStates = {
-            1: false, // 배수구 A (정문 삼거리)
-            2: false, // 배수구 B (주택가 골목)
-            3: false  // 배수구 C (삼천교 우회로)
+        function displayRandomQuote() {
+            const el = document.getElementById('quote-display');
+            if(el) el.innerText = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
+        }
+
+        const completeQuestionBank = {
+            kor: {
+                '하': [{ q: "다음 중 표준어 규정에 맞는 단어는?", opts: ["① 바램", "② 바람 (정답)", "③ 바래"], ans: 1, exp: "'어떤 일이 이루어지기를 기다리는 생각'의 명사형 표준어는 '바람'입니다." }],
+                '중': [{ q: "다음 중 피동 표현이 중복으로 오용된 잘못된 문장은?", opts: ["① 그 사실은 이미 나에게 보여졌다. (정답)", "② 도둑이 경찰에게 붙잡혔다.", "③ 창문이 세찬 바람에 열렸다."], ans: 0, exp: "'보이다'라는 피동사에 '-어지다'를 이중 결합한 '보여졌다'는 이중 피동 오류 문형입니다." }],
+                '상': [{ q: "다음 중 고전 문학 사조 중 가사(歌辭) 문학의 갈래적 속성 특징으로 옳지 않은 것은?", opts: ["① 3·4조 또는 4·4조의 4음보 연속체 운문이다.", "② 주로 조선 시대 사대부들의 유교적 충의나 강호한정을 담았다.", "③ 철저히 5음보 정형 시조 율격과 파격 형식을 엄수한다. (정답)"], ans: 2, exp: "가사는 시조와 달리 음보수가 기본 4음보 구성을 무한히 확장 연장해 나가는 연속체 산문형 운문입니다." }]
+            },
+            math: {
+                '하': [{ q: "수열 2, 4, 6, 8, ... 의 제 10항의 값은 무엇인가?", opts: ["① 18", "② 20 (정답)", "③ 22"], ans: 1, exp: "공차가 2인 등차수열의 일반항 a_n = 2n 이므로, 10번째 항은 2 * 10 = 20 입니다." }],
+                '중': [{ q: "두 사건 A, B가 서로 독립이고 P(A)=0.3, P(B)=0.5 일 때, 두 사건이 동시에 일어날 확률 P(A∩B)는?", opts: ["① 0.15 (정답)", "② 0.8", "③ 0.05"], ans: 0, exp: "독립사건의 곱셈정리에 따라 P(A∩B) = P(A) * P(B) = 0.3 * 0.5 = 0.15 입니다." }],
+                '상': [{ q: "다음 삼차함수 f(x) = x³ - 3x + 2 의 극댓값은 얼마인가?", opts: ["① 0", "② 2", "③ 4 (정답)"], ans: 2, exp: "도함수 f'(x) = 3x² - 3 = 3(x-1)(x+1) 에서 x = -1일 때 극대이므로 f(-1) = -1 + 3 + 2 = 4 입니다." }]
+            },
+            eng: {
+                '하': [{ q: "빈칸에 가장 알맞은 표현을 고르시오.\n\n'I am looking forward to ______ you soon.'", opts: ["① see", "② seeing (정답)", "③ saw"], ans: 1, exp: "'look forward to'의 to는 전치사이므로 명사나 동명사 양식(seeing)이 이어집니다." }],
+                '중': [{ q: "어법상 빈칸에 알맞은 관계대명사를 선택하시오.\n\n'This is the laptop ______ I bought yesterday.'", opts: ["① who", "② which (정답)", "③ whom"], ans: 1, exp: "선행사가 사물(the laptop)이며 목적격 관계대명사 영역이므로 which 또는 that이 적합합니다." }],
+                '상': [{ q: "다음 문맥 상 빈칸에 들어갈 단어로 가장 적절한 것은?\n\n'Science is not a static body of facts; rather, it is a dynamic process of continuous ______.'", opts: ["① preservation", "② revision (정답)", "③ stagnation"], ans: 1, exp: "정체된 사실이 아닌 동적인 과정이라 했으므로 지속적인 '개정, 수정(revision)'이 논리 전개상 매끄럽습니다." }]
+            },
+            sci: {
+                '하': [{ q: "우리 몸에서 산소를 운반하는 혈액 내 붉은 세포 성분은 무엇인가?", opts: ["① 백혈구", "② 적혈구 (정답)", "③ 혈소판"], ans: 1, exp: "헤모글로빈을 함유하여 체내 산소 운반의 중책을 담당하는 성분은 적혈구입니다." }],
+                '중': [{ q: "염화나트륨(NaCl) 수용액에 전류를 흘려보내면 각 전극에서 생성되는 물질로 올바른 것은?", opts: ["① (+)극: 염소 기체, (-)극: 나트륨 금속 혹은 수소 기체 (정답)", "② (+)극: 산소 기체, (-)극: 염소 기체", "③ (+)극: 수소 기체, (-)극: 산소 기체"], ans: 0, exp: "음이온인 Cl⁻는 (+)극으로 이동해 염소 기체가 되고, 수용액 상에서는 Na⁺보다 수소가 환원되기 쉬워 (-)극에선 수소 기체가 주되게 발생합니다." }],
+                '상': [{ q: "지구 온난화를 일으키는 대표적 온실가스 중 하나로, 식물의 광합성 작용 시 흡수되는 기체는?", opts: ["① 메테인", "② 이산화 탄소 (정답)", "③ 일산화 탄소"], ans: 1, exp: "화석 연료 연소 등으로 다량 발생하여 온실효과를 유발하나, 식물 광합성의 주원료로 소비되는 것은 이산화 탄소입니다." }]
+            },
+            mock: {
+                '하': [{ q: "[2026학년도 3월 모평 변형] 다음 글의 목적으로 가장 적절한 것은?\n\n'Dear Resident, We will be conducting a routine maintenance check on the elevator this Wednesday from 1 PM to 3 PM. Please use the stairs during this period.'", opts: ["① 엘리베이터 점검 시간에 따른 계단 이용 당부 (정답)", "② 계단 보수 공사 일정 안내", "③ 아파트 주민 자치회 임원 선출 공고"], ans: 0, exp: "특정 시간대 엘리베이터 점검을 통보하며 계단 이용을 요청하는 안내문 목적입니다." }],
+                '중': [{ q: "[2026학년도 6월 모평 기출 변형] 다음 지문의 요지로 가장 알맞은 고난도 독서 지문 평가는?\n\n'인공지능의 딥러닝 알고리즘은 데이터 편향에 취약하다. 학습 데이터 집합 자체가 인간 사회의 편견을 투영하고 있다면, 인공지능이 도출하는 결과물 역시 차별적 속성을 강하게 띨 수밖에 없다. 따라서 데이터 선별 단계의 윤리적 스크리닝이 필수적이다.'", opts: ["① AI 성능 향상을 위해 컴퓨팅 파워를 늘려야 한다.", "② 데이터 수집 단계의 무작위 추출을 전면 철폐하자.", "③ 인공지능의 편향성 해소를 위해 데이터 선별 시 윤리적 검증이 수반되어야 한다. (정답)"], ans: 2, exp: "데이터 자체의 인간 편견 반영 문제점을 꼬집으며 선별 과정의 윤리적 장치 필요성을 설파하는 요지입니다." }],
+                '상': [{ q: "[수능 모의평가 최고난도 킬러 변형] 다음 명제의 수학적 참거짓 및 극한 판정을 유추하세요.\n\n'최고차항의 계수가 1인 삼차함수 f(x)가 f(0)=0 이고, 모든 실수 x에 대해 f(-x) = -f(x)를 만족할 때, f(1)이 가질 수 있는 조건 중 극댓값이 2가 되기 위한 f(x)의 식 형태의 판정은?'", opts: ["① f(x) = x³ - 3x (정답)", "② f(x) = x³ - 2x", "③ f(x) = x³ - 6x"], ans: 0, exp: "기함수 조건에 의해 f(x) = x³ + ax 형태이며, 미분 시 3x² + a = 0의 근에서 극대치 2를 얻도록 연립 방정식을 풀면 f(x) = x³ - 3x 가 완벽히 성립합니다." }]
+            }
         };
 
-        // 날씨 프리셋 상수 정의 (전북 전주시 7월 장마철 기후 조건 반영)
-        const presets = {
-            jeonjuCurrent: { temp: 28, rain: 15, wind: 3, humidity: 85 },
-            sunny: { temp: 31, rain: 0, wind: 1, humidity: 55 },
-            storm: { temp: 24, rain: 80, wind: 20, humidity: 98 }
+        const shopCatalog = [
+            { id: 'fountain', name: '분수대', emoji: '⛲', cost: 50 },
+            { id: 'bench', name: '벤치', emoji: '🪑', cost: 25 },
+            { id: 'flower', name: '튤립밭', emoji: '🌷', cost: 15 },
+            { id: 'cat', name: '고양이', emoji: '🐈', cost: 80 },
+            { id: 'lamp', name: '가로등', emoji: '💡', cost: 35 },
+            { id: 'squirrel', name: '산다람쥐', emoji: '🐿️', cost: 65 }
+        ];
+
+        const SAVE_KEY = 'dream_classroom_tycoon_v4';
+
+        let state = {
+            username: '', lv: 1, exp: 0, maxExp: 100, gold: 50, solvedToday: 0, darkMode: false,
+            placedItems: [], unplacedStock: {},
+            streak: 0, lastLoginDate: ""
         };
 
-        // 뷰 이동 네비게이션 함수
-        function navigateTo(viewId) {
-            currentView = viewId;
-            const dashboardEl = document.getElementById('view-dashboard');
-            const mapEl = document.getElementById('view-map');
+        let currentSubject = 'kor';
+        let currentDifficulty = '하';
+        let activePlacingEmoji = null; 
+        let selectedObjectIndex = null;
+        let timerInterval = null;
+        let timerSeconds = 0;
 
-            if (viewId === 'dashboard') {
-                dashboardEl.classList.remove('hidden');
-                mapEl.classList.add('hidden');
-            } else if (viewId === 'map') {
-                dashboardEl.classList.add('hidden');
-                mapEl.classList.remove('hidden');
-            }
-
-            // 기상 아이콘 갱신 및 레이아웃 강제 동기화
-            updateWeather();
-        }
-
-        // 날씨 프리셋 설정 반영 함수
-        function setWeatherPreset(presetName) {
-            const data = presets[presetName];
-            if (!data) return;
-
-            document.getElementById('input-temp').value = data.temp;
-            document.getElementById('input-rain').value = data.rain;
-            document.getElementById('input-wind').value = data.wind;
-            document.getElementById('input-humidity').value = data.humidity;
-
-            // 시뮬레이터 수치 실시간 업데이트
-            updateWeather();
-        }
-
-        // 특정 배수구의 막힘 상태를 토글하는 함수
-        function toggleDrainStatic(id) {
-            drainStates[id] = !drainStates[id];
-            
-            const stateText = document.getElementById(`state-${id}`);
-            if (drainStates[id]) {
-                stateText.innerText = "(막힘)";
-                stateText.className = "text-rose-400 font-bold";
-            } else {
-                stateText.innerText = "(뚫림)";
-                stateText.className = "text-emerald-400 font-semibold";
-            }
-            updateWeather(); // 배수구 상태 변경에 따라 전반적인 지도 위험도 새로고침
-        }
-
-        // 전체 기상 및 위험 알림 시스템 동기화 함수
-        function updateWeather() {
-            // 입력값 취득
-            const temp = parseInt(document.getElementById('input-temp').value);
-            const rain = parseInt(document.getElementById('input-rain').value);
-            const wind = parseInt(document.getElementById('input-wind').value);
-            const humidity = parseInt(document.getElementById('input-humidity').value);
-
-            // 입력 조절용 텍스트 반영
-            document.getElementById('temp-val').innerText = `${temp}°C`;
-            document.getElementById('wind-val').innerText = `${wind} m/s`;
-            document.getElementById('humidity-val').innerText = `${humidity}%`;
-
-            // 메인 대시보드 표시용 정보 갱신
-            document.getElementById('disp-temp').innerText = `${temp}°C`;
-            document.getElementById('disp-wind').innerText = `${wind} m/s`;
-            document.getElementById('disp-humidity').innerText = `${humidity}%`;
-            document.getElementById('disp-rain').innerText = `${rain} mm/h`;
-
-            // 바람 텍스트 가이드
-            const windText = document.getElementById('wind-text');
-            if (wind >= 15) {
-                windText.className = "text-[11px] text-rose-400 font-medium mt-1 inline-flex items-center gap-1";
-                windText.innerHTML = '<i data-lucide="info" class="w-3 h-3"></i> 강풍 안전경보 발령';
-            } else if (wind >= 8) {
-                windText.className = "text-[11px] text-amber-400 font-medium mt-1 inline-flex items-center gap-1";
-                windText.innerHTML = '<i data-lucide="info" class="w-3 h-3"></i> 다소 강한 전주 돌풍';
-            } else {
-                windText.className = "text-[11px] text-sky-400 font-medium mt-1 inline-flex items-center gap-1";
-                windText.innerHTML = '<i data-lucide="info" class="w-3 h-3"></i> 잔잔한 대기 흐름';
-            }
-
-            // 1) 외출 및 대기 질 안전 수칙 연산
-            updateOutingGuide(rain, wind);
-
-            // 2) 지도상 위험 요소 느낌표 및 침수 안내 연산
-            updateDrainHazards(rain);
-
-            // 아이콘 리프레시 실행 (Lucide 라이브러리 트리거)
-            lucide.createIcons();
-        }
-
-        // 외출 등급 결정 시스템
-        function updateOutingGuide(rain, wind) {
-            const badge = document.getElementById('outing-badge');
-            const desc = document.getElementById('outing-desc');
-            const iconContainer = document.getElementById('outing-icon-container');
-
-            if (rain >= 70 || wind >= 18) {
-                badge.innerText = '🚨 야외 통학 자제 (실내 대기)';
-                badge.className = 'inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 mb-1';
-                desc.innerText = '전주 지역에 호우 및 강풍경보 수준의 폭우가 내리고 있습니다. 하천변이나 저지대 주택가 통행을 완전히 피하시고 안전한 건물 내에 대기하세요.';
-                iconContainer.className = 'p-3.5 bg-rose-500/10 rounded-xl text-rose-400 border border-rose-500/20';
-                iconContainer.innerHTML = '<i data-lucide="octagon-alert" class="w-8 h-8"></i>';
-            } else if (rain >= 30 || wind >= 10) {
-                badge.innerText = '⚠️ 우산 지참 및 하수구 보행 주의';
-                badge.className = 'inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 mb-1';
-                desc.innerText = '등하굣길 배수구 주변에 물이 빠르게 차오릅니다. 시야를 가리는 우산 사용을 피하고 보행자 안전 보도를 활용하여 안전하게 이동하세요.';
-                iconContainer.className = 'p-3.5 bg-amber-500/10 rounded-xl text-amber-400 border border-amber-500/20';
-                iconContainer.innerHTML = '<i data-lucide="triangle-alert" class="w-8 h-8"></i>';
-            } else if (rain > 0 && rain < 30) {
-                badge.innerText = '☔ 보통 우산 휴대 권장';
-                badge.className = 'inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30 mb-1';
-                desc.innerText = '전주 지역에 가벼운 보슬비나 소나기가 내리고 있습니다. 외출 시 5단 우산 등을 가방에 휴대하고 다니면 안전합니다.';
-                iconContainer.className = 'p-3.5 bg-sky-500/10 rounded-xl text-sky-400 border border-sky-500/20';
-                iconContainer.innerHTML = '<i data-lucide="umbrella" class="w-8 h-8"></i>';
-            } else {
-                badge.innerText = '☀️ 기분 좋은 등하굣길';
-                badge.className = 'inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mb-1';
-                desc.innerText = '날씨가 매우 화창하며 맑습니다! 친구들과 안전하고 유익한 교외 및 동아리 체험활동을 하기에 최고입니다.';
-                iconContainer.className = 'p-3.5 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20';
-                iconContainer.innerHTML = '<i data-lucide="smile" class="w-8 h-8"></i>';
-            }
-        }
-
-        // 지리 지도 속 위험 구역 감지 및 전체 요약 갱신 함수
-        function updateDrainHazards(rain) {
-            const drainBadge = document.getElementById('drain-badge');
-            const drainDesc = document.getElementById('drain-desc');
-
-            let activeRiskCount = 0;
-
-            for (let id = 1; id <= 3; id++) {
-                const warnBadge = document.getElementById(`warn-badge-${id}`);
-                const ping = document.getElementById(`ping-${id}`);
-                const iconContainer = document.getElementById(`icon-container-${id}`);
-
-                let isHazardous = false;
-
-                // 침수 판정 알고리즘
-                if (drainStates[id]) {
-                    // 막힌 배수구: 약한 수준 이상의 강우에서 즉각 오작동
-                    if (rain > 10) isHazardous = true;
-                } else {
-                    // 원활히 뚫린 배수구: 60mm 이상의 집중 호우 시 자연 유입용량 한계 도달 경보
-                    if (rain >= 60) isHazardous = true;
-                }
-
-                if (isHazardous) {
-                    activeRiskCount++;
-                    warnBadge.classList.remove('hidden');
-                    ping.classList.remove('hidden');
-                    iconContainer.classList.add('border-red-500', 'bg-red-950/50');
-                    iconContainer.classList.remove('border-slate-600', 'bg-slate-800');
-                    iconContainer.querySelector('i').className = "w-5 h-5 text-red-500";
-                } else {
-                    warnBadge.classList.add('hidden');
-                    ping.classList.add('hidden');
-                    iconContainer.classList.remove('border-red-500', 'bg-red-950/50');
-                    iconContainer.classList.add('border-slate-600', 'bg-slate-800');
-                    iconContainer.querySelector('i').className = "w-5 h-5 text-slate-400";
-                }
-            }
-
-            // 지도 요약 수치 반영
-            if (activeRiskCount === 3) {
-                drainBadge.innerText = '🚨 해성고 주변 범람 발생 경보';
-                drainBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30';
-                drainDesc.innerText = '등하굣길 전 구역에서 역류 사고가 감지됩니다. 삼천천 수위 상승 우려가 높으니 산책로 진입을 피하세요!';
-            } else if (activeRiskCount >= 1) {
-                drainBadge.innerText = '⚠️ 삼천/평화지구 국지적 침수 우려';
-                drainBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30';
-                drainDesc.innerText = '일부 배수구가 이물질로 막혀 도로변 빗물이 제대로 빠지지 못하고 있으니 보행 시 웅덩이를 피하십시오.';
-            } else {
-                drainBadge.innerText = '✅ 전주 지역 배수 상태 양호';
-                drainBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30';
-                drainDesc.innerText = '해성고 주변 주요 배수 인프라가 깨끗하게 유지되어 안전한 통행이 보장됩니다.';
-            }
-        }
-
-        // 브라우저 로딩 후 기본값을 '전주 실시간(장마철)' 상태로 로딩
         window.onload = function() {
-            setWeatherPreset('jeonjuCurrent');
+            // [추가] 시작 화면 명언 출력
+            displayRandomQuote();
+
+            const saved = localStorage.getItem(SAVE_KEY);
+            if(saved) {
+                try {
+                    state = JSON.parse(saved);
+                    if(!state.placedItems) state.placedItems = [];
+                    if(!state.unplacedStock) state.unplacedStock = {};
+                    if(state.username) document.getElementById('view-welcome').style.display = 'none';
+                    if(state.darkMode) document.body.classList.add('dark-mode');
+                } catch(e){ console.log("로드 에러"); }
+            }
+            
+            checkAttendance();
+            renderShop();
+            updateUI();
+            setupCanvas();
         };
+
+        function checkAttendance() {
+            const today = new Date().toDateString();
+            if (state.lastLoginDate !== today) {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                
+                if (state.lastLoginDate === yesterday.toDateString()) {
+                    state.streak++;
+                } else {
+                    state.streak = 1;
+                }
+                state.lastLoginDate = today;
+                state.gold += 10;
+                pushToast(`📅 연속 출석 ${state.streak}일째! 출석 보상 10💰 획득`);
+                saveData();
+            }
+            document.getElementById('lbl-streak').innerText = `📅 연속 출석: ${state.streak}일`;
+        }
+
+        function startApp() {
+            const name = document.getElementById('txt-username').value.trim();
+            if(!name) { pushToast("⚠️ 이름을 적어주세요!"); return; }
+            state.username = name;
+            document.getElementById('view-welcome').classList.add('hidden');
+            setTimeout(() => { document.getElementById('view-welcome').style.display = 'none'; }, 400);
+            triggerBigScaleCelebrationSound();
+            saveData();
+            updateUI();
+        }
+
+        function saveData() { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
+
+        function toggleDarkMode() {
+            state.darkMode = !state.darkMode;
+            document.body.classList.toggle('dark-mode', state.darkMode);
+            saveData();
+        }
+
+        function gainExp(amount) {
+            state.exp += amount;
+            while(state.exp >= state.maxExp) {
+                state.exp -= state.maxExp;
+                state.lv++;
+                state.maxExp = state.lv * 100;
+                triggerConfetti();
+                triggerBigScaleCelebrationSound();
+                pushToast(`🎉 정원 빌딩 등급이 Lv.${state.lv}(으)로 랭크업!`);
+            }
+            saveData();
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('lbl-username').innerText = state.username || "학생";
+            document.getElementById('lbl-lv').innerText = state.lv;
+            document.getElementById('lbl-gold').innerText = state.gold;
+            document.getElementById('lbl-solved-today').innerText = state.solvedToday;
+            document.getElementById('lbl-streak').innerText = `📅 연속 출석: ${state.streak}일`;
+
+            document.getElementById('main-tree').innerText = state.lv >= 5 ? '🍎🌳' : (state.lv >= 3 ? '🌲' : '🌱');
+
+            document.getElementById('lbl-exp-current').innerText = state.exp;
+            document.getElementById('lbl-exp-max').innerText = state.maxExp;
+            document.getElementById('bar-exp-fill').style.width = `${Math.min(100, (state.exp/state.maxExp)*100)}%`;
+
+            const layer = document.getElementById('decor-layer');
+            layer.innerHTML = '';
+            
+            state.placedItems.forEach((item, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = `game-object ${selectedObjectIndex === idx ? 'selected' : ''}`;
+                wrapper.style.left = `${item.x}%`;
+                wrapper.style.top = `${item.y}%`;
+                wrapper.style.zIndex = Math.floor(item.y); 
+
+                const emojiSpan = document.createElement('span');
+                emojiSpan.className = 'object-emoji';
+                emojiSpan.innerText = item.emoji;
+
+                let transformStr = '';
+                if(item.rot) transformStr += ` rotate(${item.rot}deg)`;
+                if(item.flip) transformStr += ` scaleX(-1)`;
+                emojiSpan.style.transform = transformStr;
+
+                wrapper.appendChild(emojiSpan);
+                wrapper.onclick = (e) => { e.stopPropagation(); selectObjectOnField(idx); };
+                layer.appendChild(wrapper);
+            });
+
+            const dock = document.getElementById('inventory-dock');
+            dock.innerHTML = '';
+            let totalStock = 0;
+
+            for(let em in state.unplacedStock) {
+                const count = state.unplacedStock[em];
+                if(count > 0) {
+                    totalStock += count;
+                    const slot = document.createElement('div');
+                    slot.className = `dock-slot ${activePlacingEmoji === em ? 'active' : ''}`;
+                    slot.innerHTML = `<span style="font-size:1.4rem;">${em}</span><span class="slot-count">${count}</span>`;
+                    slot.onclick = () => selectEmojiForPlacement(em);
+                    dock.appendChild(slot);
+                }
+            }
+            if(totalStock === 0) {
+                dock.innerHTML = `<div style="color:var(--text-sub); font-size:0.75rem; margin:auto;">인벤토리가 비었습니다. 상점에서 입고하세요!</div>`;
+            }
+            document.getElementById('lbl-unplaced-count').innerText = totalStock;
+        }
+
+        function selectEmojiForPlacement(emoji) {
+            selectedObjectIndex = null;
+            document.getElementById('game-controller').classList.remove('active');
+
+            if(activePlacingEmoji === emoji) {
+                activePlacingEmoji = null;
+                document.getElementById('placement-overlay').classList.remove('active');
+            } else {
+                activePlacingEmoji = emoji;
+                document.getElementById('placement-overlay').classList.add('active');
+                pushToast(`📍 정원 내 원하는 빈 바닥 타일을 클릭하면 배치됩니다.`);
+            }
+            updateUI();
+        }
+
+        function handleGardenPlotClick(event) {
+            if(activePlacingEmoji) {
+                const plot = document.getElementById('garden-plot-canvas');
+                const rect = plot.getBoundingClientRect();
+                const x = ((event.clientX - rect.left) / rect.width) * 100;
+                const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+                if(x < 2 || x > 98 || y < 2 || y > 94) return;
+
+                state.placedItems.push({
+                    emoji: activePlacingEmoji,
+                    x: x.toFixed(1),
+                    y: y.toFixed(1),
+                    rot: 0,
+                    flip: false
+                });
+
+                state.unplacedStock[activePlacingEmoji]--;
+                if(state.unplacedStock[activePlacingEmoji] <= 0) delete state.unplacedStock[activePlacingEmoji];
+                
+                activePlacingEmoji = null;
+                document.getElementById('placement-overlay').classList.remove('active');
+                triggerTapSound();
+                saveData();
+                updateUI();
+            } else {
+                selectedObjectIndex = null;
+                document.getElementById('game-controller').classList.remove('active');
+                updateUI();
+            }
+        }
+
+        function selectObjectOnField(index) {
+            activePlacingEmoji = null;
+            document.getElementById('placement-overlay').classList.remove('active');
+
+            selectedObjectIndex = index;
+            const item = state.placedItems[index];
+            
+            const ctrl = document.getElementById('game-controller');
+            ctrl.classList.add('active');
+            document.getElementById('lbl-selected-name').innerText = `선택 중: ${item.emoji} (오브젝트)`;
+            
+            triggerTapSound();
+            updateUI();
+        }
+
+        function rotateSelectedObject() {
+            if(selectedObjectIndex === null) return;
+            let item = state.placedItems[selectedObjectIndex];
+            item.rot = (item.rot + 90) % 360;
+            triggerTapSound();
+            saveData();
+            updateUI();
+        }
+
+        function flipSelectedObject() {
+            if(selectedObjectIndex === null) return;
+            let item = state.placedItems[selectedObjectIndex];
+            item.flip = !item.flip;
+            triggerTapSound();
+            saveData();
+            updateUI();
+        }
+
+        function removeSelectedObject() {
+            if(selectedObjectIndex === null) return;
+            let item = state.placedItems[selectedObjectIndex];
+            
+            if(!state.unplacedStock[item.emoji]) state.unplacedStock[item.emoji] = 0;
+            state.unplacedStock[item.emoji]++;
+
+            state.placedItems.splice(selectedObjectIndex, 1);
+            selectedObjectIndex = null;
+            document.getElementById('game-controller').classList.remove('active');
+            
+            pushToast(`🗑️ 선택한 조경물을 철거하여 보관함에 복구했습니다.`);
+            triggerTapSound();
+            saveData();
+            updateUI();
+        }
+
+        function changeView(viewId) {
+            document.querySelectorAll('.view-panel').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            let id = 'nav-home';
+            if(viewId==='view-quiz') id='nav-quiz';
+            if(viewId==='view-timer') id='nav-timer';
+            if(viewId==='view-shop') id='nav-shop';
+            document.getElementById(id).classList.add('active');
+
+            selectedObjectIndex = null;
+            document.getElementById('game-controller').classList.remove('active');
+
+            if(viewId === 'view-quiz') generateQuestion();
+        }
+
+        function setSubject(sub) {
+            currentSubject = sub;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-tab-${sub}`).classList.add('active');
+            generateQuestion();
+        }
+
+        function setDifficulty(diff) {
+            currentDifficulty = diff;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-diff-${diff}`).classList.add('active');
+            generateQuestion();
+        }
+
+        let activeQ = null;
+        function generateQuestion() {
+            const pool = completeQuestionBank[currentSubject][currentDifficulty];
+            activeQ = pool[Math.floor(Math.random()*pool.length)];
+
+            const bZone = document.getElementById('q-badge-zone');
+            let bCls = 'badge-easy';
+            if(currentDifficulty==='중') bCls='badge-medium';
+            if(currentDifficulty==='상') bCls='badge-hard';
+            
+            let modeTitle = currentSubject === 'mock' ? '전국연합 모의고사 기출' : '교과 등급전';
+            bZone.innerHTML = `<span class="difficulty-badge ${bCls}">${modeTitle} [${currentDifficulty}]</span>`;
+
+            document.getElementById('q-text').innerText = activeQ.q;
+            
+            const box = document.getElementById('q-options');
+            box.innerHTML = '';
+            document.getElementById('q-action-zone').style.display = 'none';
+
+            activeQ.opts.forEach((t, i) => {
+                const b = document.createElement('button');
+                b.className = 'opt-card';
+                b.innerText = t;
+                b.onclick = () => verifAnswer(i, b);
+                box.appendChild(b);
+            });
+        }
+
+        function verifAnswer(ch, btn) {
+            if(ch === activeQ.ans) {
+                btn.className = 'opt-card correct';
+                document.querySelectorAll('#q-options .opt-card').forEach(b => b.disabled = true);
+                document.getElementById('q-explain').innerText = `🎯 정답 저격 성공!\n\n풀이 해설: ${activeQ.exp}`;
+                document.getElementById('q-action-zone').style.display = 'block';
+                triggerSuccessSound();
+
+                let gGold = 15; let gExp = 20;
+                if(currentDifficulty === '중') { gGold = 30; gExp = 40; }
+                if(currentDifficulty === '상') { gGold = 60; gExp = 70; }
+                if(currentSubject === 'mock') { gGold = Math.floor(gGold * 1.5); gExp = Math.floor(gExp * 1.5); }
+
+                state.gold += gGold;
+                state.solvedToday++;
+                pushToast(`🎯 보상 획득! +${gGold}💰 머니 / +${gExp}EXP`);
+                gainExp(gExp);
+            } else {
+                btn.className = 'opt-card wrong';
+                triggerFailSound();
+                pushToast("❌ 오답입니다! 모의고사 오답 노트를 연상하세요.");
+            }
+        }
+
+        function startTimer() {
+            if(timerInterval) return;
+            document.getElementById('lbl-timer-status').innerText = "✍️ 실시간 스터디 집계 중 (+5 EXP 자동 펌핑)";
+            document.getElementById('btn-timer-start').style.display = 'none';
+            document.getElementById('btn-timer-pause').style.display = 'block';
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                let h = Math.floor(timerSeconds/3600);
+                let m = Math.floor((timerSeconds%3600)/60);
+                let s = timerSeconds%60;
+                document.getElementById('lbl-timer-clock').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                if(timerSeconds % 5 === 0) { gainExp(5); triggerTapSound(); }
+            }, 1000);
+        }
+        function pauseTimer() {
+            clearInterval(timerInterval); timerInterval = null;
+            document.getElementById('lbl-timer-status').innerText = "⏸️ 일시 중단됨";
+            document.getElementById('btn-timer-start').style.display = 'block';
+            document.getElementById('btn-timer-pause').style.display = 'none';
+        }
+        function resetTimer() { pauseTimer(); timerSeconds=0; document.getElementById('lbl-timer-clock').innerText="00:00:00"; document.getElementById('lbl-timer-status').innerText="대기실 휴식 중"; }
+
+        function renderShop() {
+            const grid = document.getElementById('shop-items-grid');
+            grid.innerHTML = '';
+            shopCatalog.forEach(item => {
+                const c = document.createElement('div');
+                c.className = 'shop-card';
+                c.innerHTML = `<div class="shop-icon">${item.emoji}</div>
+                               <div style="font-weight:800;font-size:0.9rem;">${item.name}</div>
+                               <div style="color:#0EA5E9;font-size:0.8rem;font-weight:700;margin-top:2px;">${item.cost} 💰</div>
+                               <button onclick="buy('${item.emoji}', ${item.cost})">창고입고</button>`;
+                grid.appendChild(c);
+            });
+        }
+
+        function buy(emoji, price) {
+            if(state.gold < price) { pushToast("💰 머니가 부족하여 상점 거래가 무산되었습니다."); return; }
+            state.gold -= price;
+            if(!state.unplacedStock[emoji]) state.unplacedStock[emoji] = 0;
+            state.unplacedStock[emoji]++;
+            pushToast(`🛒 [${emoji}] 아이템이 인벤토리에 보관되었습니다!`);
+            triggerSuccessSound();
+            saveData();
+            updateUI();
+        }
+
+        function tapTree(e) { e.stopPropagation(); triggerTapSound(); pushToast("🌳 꿈나무가 학생의 열공 버프를 먹고 자랍니다!"); }
+        function pushToast(m) { const t=document.getElementById('toast'); const n=t.cloneNode(true); n.innerText=m; n.style.display='block'; t.parentNode.replaceChild(n,t); }
+
+        let actx = null;
+        function getCtx() { if(!actx) actx = new(window.AudioContext||window.webkitAudioContext)(); return actx; }
+        function triggerTapSound() {
+            const c=getCtx(); const o=c.createOscillator(); const g=c.createGain(); o.connect(g); g.connect(c.destination);
+            o.frequency.setValueAtTime(400, c.currentTime); g.gain.setValueAtTime(0.04, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.06);
+            o.start(); o.stop(c.currentTime+0.06);
+        }
+        function triggerSuccessSound() {
+            const c=getCtx(); const now=c.currentTime;
+            [523, 659, 783].forEach((f,i)=>{
+                const o=c.createOscillator(); const g=c.createGain(); o.connect(g); g.connect(c.destination);
+                o.frequency.setValueAtTime(f, now+i*0.06); g.gain.setValueAtTime(0.05, now+i*0.06);
+                g.gain.exponentialRampToValueAtTime(0.001, now+i*0.06+0.14); o.start(now+i*0.06); o.stop(now+i*0.06+0.14);
+            });
+        }
+        function triggerFailSound() {
+            const c=getCtx(); const o=c.createOscillator(); const g=c.createGain(); o.connect(g); g.connect(c.destination);
+            o.frequency.setValueAtTime(130, c.currentTime); o.frequency.linearRampToValueAtTime(80, c.currentTime+0.2);
+            g.gain.setValueAtTime(0.06, c.currentTime); g.gain.linearRampToValueAtTime(0.001, c.currentTime+0.2); o.start(); o.stop(c.currentTime+0.2);
+        }
+        function triggerBigScaleCelebrationSound() {
+            const c=getCtx(); const now=c.currentTime;
+            [523, 659, 783, 1046].forEach((f,i)=>{
+                const o=c.createOscillator(); const g=c.createGain(); o.type='triangle'; o.connect(g); g.connect(c.destination);
+                o.frequency.setValueAtTime(f, now+i*0.08); g.gain.setValueAtTime(0.06, now+i*0.08);
+                g.gain.exponentialRampToValueAtTime(0.001, now+i*0.08+0.25); o.start(now+i*0.08); o.stop(now+i*0.08+0.25);
+            });
+        }
+
+        let cv, cvCtx, pt = [];
+        function setupCanvas() { cv=document.getElementById('effect-canvas'); cvCtx=cv.getContext('2d'); window.addEventListener('resize', rz); rz(); }
+        function rz() { cv.width=window.innerWidth; cv.height=window.innerHeight; }
+        function triggerConfetti() {
+            pt = []; const cls = ['#0EA5E9', '#22C55E', '#EF4444', '#F59E0B', '#A855F7'];
+            for(let i=0; i<90; i++) {
+                pt.push({
+                    x: cv.width/2, y: cv.height+10, vx: (Math.random()-0.5)*13, vy: -Math.random()*15-8,
+                    size: Math.random()*6+5, color: cls[Math.floor(Math.random()*cls.length)], rot: Math.random()*360, rotS: (Math.random()-0.5)*7, op: 1
+                });
+            }
+            requestAnimationFrame(updP);
+        }
+        function updP() {
+            cvCtx.clearRect(0,0,cv.width,cv.height); let al=0;
+            pt.forEach(p => {
+                if(p.op <= 0) return; p.vy += 0.35; p.x += p.vx; p.y += p.vy; p.rot += p.rotS; p.op -= 0.012;
+                if(p.y < cv.height && p.op > 0) {
+                    al++; cvCtx.save(); cvCtx.translate(p.x, p.y); cvCtx.rotate(p.rot*Math.PI/180);
+                    cvCtx.fillStyle=p.color; cvCtx.globalAlpha=p.op; cvCtx.fillRect(-p.size/2, -p.size/2, p.size, p.size); cvCtx.restore();
+                }
+            });
+            if(al > 0) requestAnimationFrame(updP);
+        }
     </script>
 </body>
 </html>
